@@ -1,0 +1,28 @@
+{
+  "0": {
+    "final_kl": 0.6383,
+    "one_nn_error": 0.0195
+  },
+  "1": {
+    "final_kl": 0.6343,
+    "one_nn_error": 0.0211
+  },
+  "2": {
+    "final_kl": 0.6348,
+    "one_nn_error": 0.0195
+  },
+  "3": {
+    "final_kl": 0.6439,
+    "one_nn_error": 0.0228
+  },
+  "4": {
+    "final_kl": 0.635,
+    "one_nn_error": 0.02
+  },
+  "summary": {
+    "kl_mean": 0.6373,
+    "kl_std": 0.0036,
+    "err_mean": 0.0206,
+    "err_std": 0.0013
+  }
+}

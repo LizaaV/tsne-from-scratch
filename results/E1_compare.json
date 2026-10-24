@@ -1,0 +1,35 @@
+{
+  "t-SNE (ours)": {
+    "seconds": 93.4,
+    "one_nn_error": 0.0195,
+    "trustworthiness_k12": 0.9919
+  },
+  "t-SNE (scikit-learn)": {
+    "seconds": 10.6,
+    "one_nn_error": 0.0206,
+    "trustworthiness_k12": 0.9929
+  },
+  "Sammon (ours)": {
+    "seconds": 172.8,
+    "one_nn_error": 0.4174,
+    "trustworthiness_k12": 0.8581
+  },
+  "Isomap k=12": {
+    "seconds": 3.2,
+    "one_nn_error": 0.3005,
+    "trustworthiness_k12": 0.8566
+  },
+  "LLE k=12": {
+    "seconds": 0.4,
+    "one_nn_error": 0.2331,
+    "trustworthiness_k12": 0.8787
+  },
+  "PCA": {
+    "seconds": 0.0,
+    "one_nn_error": 0.4252,
+    "trustworthiness_k12": 0.8316
+  },
+  "original 64-D pixels": {
+    "one_nn_error": 0.025
+  }
+}

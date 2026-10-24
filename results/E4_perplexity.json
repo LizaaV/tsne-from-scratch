@@ -1,0 +1,22 @@
+{
+  "5": {
+    "one_nn_error": 0.0234,
+    "final_kl": 0.8762,
+    "median_sigma": 0.3132
+  },
+  "15": {
+    "one_nn_error": 0.0222,
+    "final_kl": 0.7625,
+    "median_sigma": 0.424
+  },
+  "40": {
+    "one_nn_error": 0.0195,
+    "final_kl": 0.6383,
+    "median_sigma": 0.5335
+  },
+  "100": {
+    "one_nn_error": 0.0223,
+    "final_kl": 0.5247,
+    "median_sigma": 0.6531
+  }
+}
