@@ -1,0 +1,68 @@
+% COMP3314 Group Project report, Group 35
+% Paper: van der Maaten & Hinton (2008), Visualizing Data using t-SNE, JMLR 9.
+% Limits: max 4 pages main text (references and appendix excluded). Due 29 Nov 2026, 23:59, as PDF named Group_35.
+
+\documentclass{article}
+
+% Course template: NeurIPS 2026 style (official neurips_2026.sty, kept in extra/), preprint option.
+% Build: tectonic -X compile -Z search-path=extra report.tex (VS Code does this on save).
+\PassOptionsToPackage{numbers, compress}{natbib}
+\usepackage[preprint]{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+% Read figures straight from resources/ (do not copy or edit them there).
+\graphicspath{{../../resources/figures/}}
+
+\title{Visualizing Data using t-SNE: Study, Critical Analysis and Partial Reproduction}
+
+\author{%
+  Group 35 \\
+  COMP3314 Introduction to Machine Learning, The University of Hong Kong \\
+  % TODO: list every member's name and affiliation, e.g.
+  % Name One \And Name Two \And Name Three
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  % TODO
+\end{abstract}
+
+\section{Introduction}
+% Problem formulation, motivation, main contributions of the paper.
+
+\section{Method}
+% SNE, symmetric SNE, the crowding problem, Student-t kernel, gradient, optimisation tricks.
+% Connections to course topics.
+
+\section{Experiments in the paper}
+% Setup (MNIST, Olivetti, COIL-20), baselines, what the evidence supports.
+
+\section{Critical analysis}
+% Assumptions, strengths, limitations, possible improvements and extensions.
+
+\section{Reproduction}
+% Scope, implementation, comparison with the paper, discrepancies and challenges.
+% Code: \url{https://github.com/LizaaV/tsne-from-scratch}
+% Label our results clearly as ours, and figures taken from the paper as the paper's.
+
+\section{Conclusion}
+
+\begin{thebibliography}{9}
+\bibitem{vandermaaten2008}
+L.~van der Maaten and G.~Hinton.
+\newblock Visualizing data using t-{SNE}.
+\newblock \emph{Journal of Machine Learning Research}, 9(86):2579--2605, 2008.
+\end{thebibliography}
+
+\end{document}
