@@ -7,3 +7,9 @@ mnist.npz
 # LaTeX build files
 *.log
 *.synctex.gz
+
+# Downloaded data sets (re-downloadable; see submission/code/compare3.py)
+submission/data/
+
+# keep the compare3 run log despite *.log above
+!submission/outputs/compare3/run.log
