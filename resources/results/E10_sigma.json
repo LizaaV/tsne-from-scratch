@@ -1,0 +1,12 @@
+{
+  "median sigma A, B, C": [
+    1.015343646817133,
+    4.122895302204277,
+    5.126599159327636
+  ],
+  "sigma ratio B/A": 4.060591027607843,
+  "true width ratio B/A": 5.056495996045103,
+  "sigma ratio C/A": 5.049127135820799,
+  "true width ratio C/A": 5.094272875289384,
+  "mass of P on pairs joining B and C": 3.550842456273594e-07
+}

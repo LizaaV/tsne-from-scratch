@@ -24,9 +24,11 @@ Repository: https://github.com/LizaaV/tsne-from-scratch
 | `resources/worked_example.py` | a 3-point example small enough to check by hand | ours |
 | `resources/experiments.py` | experiments E1–E8 below | ours; uses scikit-learn for Isomap, LLE, its own t-SNE (cross-check only), 1-NN classifier, trustworthiness |
 | `resources/demo_live.py` | animated run for the presentation | ours |
+| `resources/e10_sigma.py` | E10: median $\sigma_i$ per cluster on E7's three clusters (critical analysis, Extension 3) | ours |
 | `submission/code/compare3.py` | the paper's Section 4 comparison (Figures 2–5) on MNIST, Olivetti and COIL-20, with numbers added | ours; uses scikit-learn for Isomap, LLE, trustworthiness and the data loaders |
 | `resources/figures/`, `resources/results/` | outputs of `resources/experiments.py` (E1–E7) | generated |
 | `submission/outputs/` | outputs of E8 and of `compare3.py` | generated |
+| `submission/report/figures/` | the two figures of the critical analysis (method map; sizes and gaps from E7 and E10), drawn in TikZ; sources in `figures/source/` | ours |
 
 ## Ours and reused
 
@@ -136,6 +138,7 @@ E2–E7 use the small digits set; their figures are in `resources/figures/`. E8'
 | E5 | Does early exaggeration help? | slightly on digits: KL 0.638 vs 0.663, 1-NN 1.9% vs 2.2% | `E5_*.png`, `E5_tsne_animation.gif` |
 | E6 | Run-to-run variation (5 seeds) | KL 0.637 ± 0.004, 1-NN 2.1 ± 0.1%; layout changes | `E6_seeds.png` |
 | E7 | Are cluster sizes and gaps preserved? (our extension) | no: true spread ratio 5.1 → 1.4; gap ratio 5.2 → 3.4 | `E7_sizes_and_gaps.png` |
+| E10 | Do the bell widths $\sigma_i$ keep the cluster sizes the map drops? (our extension; `resources/e10_sigma.py`) | mostly: median-$\sigma_i$ ratio 4.1 (true 5.1) for B/A and 5.0 (true 5.1) for C/A; pairs joining B and C hold $3.6 \times 10^{-7}$ of $P$ | none (numbers in `resources/results/E10_sigma.json`) |
 | E8 | MNIST-6000 as in the paper | 1-NN error 5.92% on the 2-D map vs 6.03% on the 784-D pixels; final KL 1.374; 118 s | `E8_mnist6000.png` |
 
 Paper (MNIST, §5): 1-NN error 5.13% on the 2-D map vs 5.75% in 784-D. That number comes from random-walk t-SNE using all 60,000 digits, so the setup differs from E8, but the conclusion is the same: the map classifies about as well as the original images.
