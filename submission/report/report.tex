@@ -32,7 +32,7 @@
 %   report/figures/               B4 critical analysis (method map; sizes and gaps), drawn in TikZ, sources in figures/source/
 \graphicspath{{../../resources/figures/}{../outputs/compare3/}{../outputs/figures/}{figures/}}
 
-\title{Visualizing Data using t-SNE: Study, Critical Analysis and Partial Reproduction}
+\title{Reproducing and Evaluating t-SNE for High-Dimensional Data Visualization}
 
 % TODO (each member): check the spelling of your name; add an email line if we want one.
 \author{%
@@ -54,14 +54,16 @@
 \maketitle
 
 \begin{abstract}
-  % TODO (joint, write last, about 5 sentences):
-  % the paper and its problem; the key idea (heavy-tailed Student-t map kernel);
-  % our verdict on the evidence; what we reproduced and the headline number.
+  Visualizing high-dimensional data, such as 784-dimensional MNIST digits, needs a 2-D map that keeps each point's neighbours together, but earlier methods crowd points together or fail on real data. van der Maaten and Hinton~\cite{vandermaaten2008} propose t-SNE, which fixes this crowding with a symmetric cost and a heavy-tailed Student-t distribution in the map. We judge the argument and method sound and the core claims supported, but the broader claims rest on pictures judged by eye, and the maps show neighbourhoods, not cluster sizes or gaps. We reimplemented t-SNE from scratch on MNIST, Olivetti faces and COIL-20: its 1-NN error is 5.9\%, 6.3\% and 3.6\%, matching raw pixels on MNIST (6.0\%) and far below Sammon mapping, Isomap and LLE (18.8--64.3\%).
 \end{abstract}
 
 \section{Introduction}
-% Owner: B1. Target: 0.5 page.
-% Problem formulation, motivation, main contributions of the paper.
+
+Many data sets describe each item with hundreds of numbers: a $28\times28$ MNIST digit is a point in 784 dimensions and cannot be inspected directly. van der Maaten and Hinton~\cite{vandermaaten2008} address this visualisation problem: map points $x_1,\dots,x_n$ in $D$ dimensions to 2-D points $y_1,\dots,y_n$ so that similar items lie close together. The task is unsupervised; class labels only colour the final plot.
+
+Real data lie near curved, low-dimensional surfaces (manifolds), so local structure, meaning which points are each other's neighbours, matters most. PCA keeps large distances and flattens the data, so points far apart along the surface can land on top of each other. Seven earlier non-linear methods (Sammon mapping, CCA, SNE, Isomap, MVU, LLE and Laplacian Eigenmaps) aim to keep local structure. According to the paper, they work on artificial data, but on real data most cannot preserve local and global structure in one map.
+
+The paper makes three contributions. (1) t-SNE, a variant of SNE~\cite{hinton2002} that is easier to optimise through a symmetric cost and alleviates crowding with a heavy-tailed Student-t distribution in the map. (2) A random-walk version for data sets much larger than 10,000 points. (3) Experiments against the seven techniques above on five data sets, where t-SNE's maps are clearly better on almost all.
 
 \section{Method}
 \label{sec:method}
