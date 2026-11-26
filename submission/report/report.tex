@@ -144,7 +144,7 @@ L.~van der Maaten and G.~Hinton.
 
 Figure~\ref{fig:map} is the map for Section~\ref{sec:critical}. The boxes are the steps of t-SNE (our Section~\ref{sec:method}); each label below a box is a strength, assumption or limitation that comes from that step, and the dashed strip holds those about the paper as a whole.
 
-\begin{figure}[!htb]
+\begin{figure}[!h]
   \centering
   \includegraphics[width=\linewidth]{B4_method_map.pdf}
   \caption{Our critical analysis at a glance (our figure): the steps of t-SNE, and each strength (S), assumption (A) and limitation (L) under the step that causes it. The dot shows its state today, and $^*$ marks those the authors admit themselves.}
@@ -154,9 +154,12 @@ Figure~\ref{fig:map} is the map for Section~\ref{sec:critical}. The boxes are th
 \section{The paper's claims, and the synthetic-cluster test}
 \label{app:claims}
 
+\subsection{The seven claims}
+\label{app:claims-table}
+
 Table~\ref{tab:claims} supports the count in Section~\ref{sec:critical}. Verdicts use the paper, our experiments (Sections~\ref{sec:critical} and~\ref{sec:repro}) and later work.
 
-\begin{table}[!htb]
+\begin{table}[!h]
 \centering\footnotesize
 \caption{Seven claims, how the paper supports them, and our verdict.}
 \label{tab:claims}
@@ -175,7 +178,12 @@ Quality stable between runs (\S6.2) & stated, no runs shown & five seeds on digi
 \end{tabular}
 \end{table}
 
-\begin{figure}[!htb]
+\subsection{The synthetic-cluster test}
+\label{app:sizes}
+
+Figure~\ref{fig:sizes} backs limitation L1 and Extension~(3) in Section~\ref{sec:critical}: on clusters whose sizes and gaps are known, it compares what PCA and t-SNE draw.
+
+\begin{figure}[!h]
   \begin{minipage}[c]{0.52\linewidth}
     \includegraphics[width=\linewidth]{B4_sizes_gaps.pdf}
   \end{minipage}\hfill
@@ -197,6 +205,6 @@ Quality stable between runs (\S6.2) & stated, no runs shown & five seeds on digi
   \label{fig:sizes}
 \end{figure}
 
-\paragraph{How Figure~\ref{fig:sizes} was made.} Three Gaussian clusters of 200 points in 10-D: A has standard deviation 1, B and C have 5, and the centres lie at distances 10 (A to B) and 50 (B to C). t-SNE uses our implementation, perplexity 30, no PCA, seed 0. Width is the mean distance of a cluster's points to their centre; gap is the distance between centres; the $\sigma_i$ column is the ratio of the clusters' median $\sigma_i$. Pairs that join B and C hold less than $10^{-6}$ of the total mass of $P$. The $\sigma_i$ ratio for B/A (4.1) is below the true 5.1 because B overlaps A, so some neighbours of B's points lie in the tight cluster.
+\paragraph{How it was made.} Three Gaussian clusters of 200 points in 10-D: A has standard deviation 1, B and C have 5, and the centres lie at distances 10 (A to B) and 50 (B to C). t-SNE uses our implementation, perplexity 30, no PCA, seed 0. Width is the mean distance of a cluster's points to their centre; gap is the distance between centres; the $\sigma_i$ column is the ratio of the clusters' median $\sigma_i$. Pairs that join B and C hold less than $10^{-6}$ of the total mass of $P$. The $\sigma_i$ ratio for B/A (4.1) is below the true 5.1 because B overlaps A, so some neighbours of B's points lie in the tight cluster.
 
 \end{document}
