@@ -1,6 +1,12 @@
 % COMP3314 Group Project report, Group 35
 % Paper: van der Maaten & Hinton (2008), Visualizing Data using t-SNE, JMLR 9.
 % Limits: max 4 pages main text (references and appendix excluded). Due 29 Nov 2026, 23:59, as PDF named Group_35.
+%
+% Suggested page budget (4.0 pages in total; change it together, not alone):
+%   Abstract 0.1 | 1 Introduction 0.5 | 2 Method 1.0 | 3 Experiments in the paper 0.5
+%   4 Critical analysis 0.9 | 5 Reproduction 0.8 | 6 Conclusion 0.2
+%
+% Rule from the brief: label every figure and number as the paper's or ours.
 
 \documentclass{article}
 
@@ -18,16 +24,27 @@
 \usepackage{graphicx}
 \usepackage{xcolor}
 
-% Read figures straight from resources/ (do not copy or edit them there).
-\graphicspath{{../../resources/figures/}}
+% Read figures straight from where they are generated (do not copy or edit them there).
+%   resources/figures/            E1-E7, small digits set
+%   submission/outputs/compare3/  the 12 maps on MNIST, Olivetti, COIL-20
+%   submission/outputs/figures/   E8, MNIST-6000
+\graphicspath{{../../resources/figures/}{../outputs/compare3/}{../outputs/figures/}}
 
 \title{Visualizing Data using t-SNE: Study, Critical Analysis and Partial Reproduction}
 
+% TODO (each member): check the spelling of your name; add an email line if we want one.
 \author{%
-  Group 35 \\
-  COMP3314 Introduction to Machine Learning, The University of Hong Kong \\
-  % TODO: list every member's name and affiliation, e.g.
-  % Name One \And Name Two \And Name Three
+  Jelisaveta Vasiljevic \\
+  The University of Hong Kong
+  \And
+  Alexandre Bommensath \\
+  The University of Hong Kong
+  \And
+  Anna Claire Breuss-Burgess \\
+  The University of Hong Kong
+  \And
+  Adel Kussainova \\
+  The University of Hong Kong
 }
 
 \begin{document}
@@ -35,29 +52,39 @@
 \maketitle
 
 \begin{abstract}
-  % TODO
+  % TODO (joint, write last, about 5 sentences):
+  % the paper and its problem; the key idea (heavy-tailed Student-t map kernel);
+  % our verdict on the evidence; what we reproduced and the headline number.
 \end{abstract}
 
 \section{Introduction}
+% Owner: B1. Target: 0.5 page.
 % Problem formulation, motivation, main contributions of the paper.
 
 \section{Method}
+% Owner: B2, Anna Claire. Target: 1.0 page.
 % SNE, symmetric SNE, the crowding problem, Student-t kernel, gradient, optimisation tricks.
 % Connections to course topics.
 
 \section{Experiments in the paper}
+% Owner: B3, Alex. Target: 0.5 page.
 % Setup (MNIST, Olivetti, COIL-20), baselines, what the evidence supports.
 
 \section{Critical analysis}
-% Assumptions, strengths, limitations, possible improvements and extensions.
+% Owner: B4, Alex and co-owner. Target: 0.9 page.
+% Assumptions, strengths, limitations; our own insights, improvements and extensions.
 
 \section{Reproduction}
+% Owner: B3, Alex. Target: 0.8 page.
 % Scope, implementation, comparison with the paper, discrepancies and challenges.
-% Code: \url{https://github.com/LizaaV/tsne-from-scratch}
+% Code (the link must appear in the text): \url{https://github.com/LizaaV/tsne-from-scratch}
 % Label our results clearly as ours, and figures taken from the paper as the paper's.
+% Our numbers: submission/outputs/compare3/REPORT.md.
 
 \section{Conclusion}
+% Joint. Target: 0.2 page. Verdict on the paper, and what we learned.
 
+% TODO: add the other sources we cite (SNE, Sammon, Isomap, LLE, and the later t-SNE work).
 \begin{thebibliography}{9}
 \bibitem{vandermaaten2008}
 L.~van der Maaten and G.~Hinton.
