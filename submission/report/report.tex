@@ -27,7 +27,7 @@
 \usepackage{xcolor}
 \usepackage{enumitem} % compact numbered lists
 \usepackage{algorithm}
-\usepackage{algpseudocode} % pseudocode in Appendix F
+\usepackage{algpseudocode} % pseudocode in Appendix B
 \algrenewcommand\algorithmicrequire{\textbf{Input:}}
 \algrenewcommand\algorithmicensure{\textbf{Output:}}
 % Course-link tag (Section 2): \course{topic, Lxx} prints (Course link: topic, Lxx)
@@ -149,7 +149,7 @@ Equations (\ref{eq:q-t})--(\ref{eq:grad-t}) give the new $q_{ij}$ and gradient e
 The paper's main text \cite{vandermaaten2008} covers three image data sets: 6,000 random MNIST digits \cite{lecun1998} (784 pixels), 400 Olivetti face photos \cite{samaria1994} of 40 people, and 1,440 COIL-20 images \cite{nene1996} of 20 objects from 72 angles. Two more appear only in its supplement.
 
 \subsection{Setup.}
-t-SNE is compared with Sammon mapping \cite{sammon1969}, Isomap \cite{tenenbaum2000} and LLE \cite{roweis2000}; four more techniques, including SNE \cite{hinton2002}, are only in the supplement. All receive the same input, reduced to 30 dimensions with PCA (Lecture~3), with one setting each: perplexity 40 (t-SNE), $k = 12$ (Isomap, LLE), 500 Newton iterations (Sammon). Each technique turns each data set into a 2-D map, which gives twelve maps to compare.
+t-SNE is compared with Sammon mapping \cite{sammon1969}, Isomap \cite{tenenbaum2000} and LLE \cite{roweis2000}; four more techniques, including SNE \cite{hinton2002}, are only in the supplement. All receive the same input, reduced to 30 dimensions with PCA \textit{(L03)}, with one setting each: perplexity 40 (t-SNE), $k = 12$ (Isomap, LLE), 500 Newton iterations (Sammon). Each technique turns each data set into a 2-D map, which gives twelve maps to compare.
 
 \subsection{Results.}
 The results are maps that are judged by eye. Class labels are not used to build a map, only to colour its points afterwards. Figure~\ref{fig:paper-mnist-ab} shows the paper's MNIST maps for t-SNE and Sammon mapping.
@@ -174,14 +174,14 @@ Isomap and LLE (Figure~\ref{fig:paper-mnist-cd}) also fail to separate the digit
 
 On faces (Figure~\ref{fig:paper-olivetti}) t-SNE groups most people's photos, and Sammon mapping comes closest of the rivals. On objects (Figure~\ref{fig:paper-coil20}) t-SNE draws many objects as a closed loop, because each object is photographed through a full turn.
 
-In a second experiment, which uses all 60,000 MNIST digits (Figure~\ref{fig:paper-randomwalk}), a 1-nearest-neighbour (1-NN) classifier (Lecture~1) has an error of 5.13\% on the 2-D map against 5.75\% on the raw pixels, so the map keeps nearest neighbours about as well as 784 dimensions.
+In a second experiment, which uses all 60,000 MNIST digits (Figure~\ref{fig:paper-randomwalk}), a 1-nearest-neighbour (1-NN) classifier \textit{(L01)} has an error of 5.13\% on the 2-D map against 5.75\% on the raw pixels, so the map keeps nearest neighbours about as well as 784 dimensions.
 
 \subsection{How strong the evidence is.}
 The evidence is strong visually but thin as numerical proof. Of the paper's seven claims (Table~\ref{tab:claims}), only claim~2 is measured. Claims~1, 3, 4 and~7 rest on the maps alone, and claims~5 and~6 have no reported experiment. The evidence is strongest in the size and consistency of the visual gap across digits, faces and objects, and thinnest in measurement, where only t-SNE is scored and each method is shown once with one setting. Section~\ref{sec:reproduction} puts numbers on claims~2, 3 and~6.
 
 \section{Critical analysis}
 \label{sec:critical}
-% Owner: B4, Jelisaveta. Figures 1-2 and the claims table are in Appendices A-B.
+% Owner: B4, Jelisaveta. Figures 1-2 and the claims table are in Appendices D-E.
 % Conventions: \S = a section of the paper; "our Section" = this report; "step" = Figure 1.
 
 
@@ -193,7 +193,7 @@ The main problem is crowding, as SNE and Sammon mapping squeeze points at modera
 \subsection{The method: does it work?}
 \textbf{The central trade-off.} t-SNE is built to keep neighbours, not distances, through two design choices (our Section~\ref{sec:method}): step~1 gives every point about the same number of neighbours, set by one fixed perplexity, and the cost in step~3 punishes a lost neighbour heavily but barely weighs far-apart pairs. Because far pairs barely count, the heavy-tailed curve of step~2 can push moderately distant points apart without penalty, so t-SNE fixes crowding at its cause (S1). Because a lost neighbour costs the most, t-SNE keeps true neighbours best (S2): its map classifies about as well as the raw images (1-NN error 5.13\% against 5.75\% in \S5; ours 5.92\% against 6.03\%) and far better than its rivals (our Section~\ref{sec:repro}). The same two choices cause the main limitation: group sizes and gaps are distorted (L1). With equal neighbour counts, a wide group and a tight group look alike in $P$, so sizes are lost; with far pairs barely counting, the map may place distant groups almost anywhere, so gaps are lost. On synthetic clusters, one 5.1 times as wide as another is drawn the same size, while PCA keeps the ratio (Figure~\ref{fig:sizes}, Appendix~\ref{app:claims}). The authors present this design only as an advantage (\S2); we see L1 as the price of S1 and S2.
 
-\textbf{Assumptions.} The map is built from the neighbours chosen in step~1, so if they are wrong, the map is wrong too. Step~1 rests on three choices the paper never tests. Cutting the data to 30 dimensions with PCA (Lecture~3) assumes this loses nothing important (A3, \S4.2), yet PCA is linear and can blur curved structure that separates neighbours. Choosing neighbours by straight-line distance assumes that close means similar (A1), yet two face photos of different people in similar light can be closer in pixels than two of the same person; the authors themselves doubt this for faces (\S6.2). Using one perplexity for every point assumes that one neighbour count fits all groups (A2), yet a small group may need fewer neighbours than a large one. Each could fail on real data, so each should be tested (Extension~2).
+\textbf{Assumptions.} The map is built from the neighbours chosen in step~1, so if they are wrong, the map is wrong too. Step~1 rests on three choices the paper never tests. Cutting the data to 30 dimensions with PCA \textit{(L03)} assumes this loses nothing important (A3, \S4.2), yet PCA is linear and can blur curved structure that separates neighbours. Choosing neighbours by straight-line distance assumes that close means similar (A1), yet two face photos of different people in similar light can be closer in pixels than two of the same person; the authors themselves doubt this for faces (\S6.2). Using one perplexity for every point assumes that one neighbour count fits all groups (A2), yet a small group may need fewer neighbours than a large one. Each could fail on real data, so each should be tested (Extension~2).
 
 \textbf{Other strengths and limitations.} t-SNE is also easier to run than SNE (S3), with a simpler gradient and no simulated annealing (\S3.1, \S3.3). Its remaining limitations are practical, and the authors admit them. Because each run starts at random and depends on settings such as the perplexity, the layout changes between runs (L2): across our seeds and perplexities the quality stayed the same (1-NN error 1.9--2.3\%), but the groups moved and changed shape. Using every pair at every step makes it slow on big data (L3, $O(n^2)$); learning no mapping, it cannot add new points (L4); and with the tail's weight set by hand, it is only shown for 2-D and 3-D maps (L5, \S6.2). Overall, the method is strong, with one built-in trade-off: keeping neighbours gives S1 and S2 and causes L1, the maps are only as good as A1--A3 allow, and the other limits concern running it, not what its maps mean; since most were fixed later (Section~\ref{sec:after}), they weigh little against the method.
 
@@ -224,7 +224,7 @@ Each extension addresses a gap that is still open. \textbf{(1) Score the compari
 We wrote t-SNE and Sammon mapping from scratch in NumPy, following the paper's equations and settings, and used scikit-learn \cite{sklearn} only for Isomap, LLE and scoring. The code is at: \href{https://github.com/LizaaV/tsne-from-scratch}{\nolinkurl{github.com/LizaaV/tsne-from-scratch}}.
 
 \subsection{Results against the paper.}
-We reran the paper's comparison of four methods on its three data sets and scored each map with the paper's own measure, the 1-NN error under 10-fold cross-validation (Lecture~2). Table~\ref{tab:ours} gives the results.
+We reran the paper's comparison of four methods on its three data sets and scored each map with the paper's own measure, the 1-NN error under 10-fold cross-validation \textit{(L02)}. Table~\ref{tab:ours} gives the results.
 
 \begin{table}[H]
   \caption{1-NN error on the 2-D map (lower is better). All rows are ours except the last two.}
@@ -320,79 +320,48 @@ S.~A. Nene, S.~K. Nayar, and H.~Murase.
 
 \clearpage
 \appendix
-% Appendices A and B belong to Section 4 (Liza). C to E belong to Sections 3 and 5 (Alex).
+% Appendices are in order of first reference. A-B belong to Section 2 (Anna Claire), C to Section 3 (Alex),
+% D-E to Section 4 (Liza), F-G to Section 5 (Alex).
 
-\section{Method map of our critical analysis}
-\label{app:map}
+\section{The Gaussian and Student-t kernels}
+\label{app:kernels}
 \appendixnumbering{A}
 
-Figure~\ref{fig:map} is the map for Section~\ref{sec:critical}. The boxes are the steps of t-SNE (our Section~\ref{sec:method}); each label below a box is a strength, assumption or limitation that comes from that step, and the dashed strip holds those about the paper as a whole.
+Figure~\ref{fig:kernels} illustrates the heavy tail of the Student-t used for the map similarities in Section~\ref{sec:method}.
 
-\begin{figure}[!h]
+\begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth]{B4_method_map.pdf}
-  \caption{Our critical analysis at a glance (our figure): the steps of t-SNE, and each strength (S), assumption (A) and limitation (L) under the step that causes it. The dot shows its state today, and $^*$ marks those the authors admit themselves.}
-  \label{fig:map}
+  \includegraphics[width=0.58\linewidth]{ours_gaussian_vs_student.pdf}
+  \caption{\emph{Our figure.} Gaussian $e^{-d^2}$ and Student-t $(1+d^2)^{-1}$ similarity (unnormalised) against map distance $d=\|y_i-y_j\|$. For the same similarity of 0.1, the Gaussian places two points about 1.5 apart and the Student-t places them 3 apart.}
+  \label{fig:kernels}
 \end{figure}
 
-\section{The paper's claims, and the synthetic-cluster test}
-\label{app:claims}
+\section{The t-SNE algorithm}
+\label{app:algorithm}
 \appendixnumbering{B}
+\setcounter{algorithm}{0}
+\renewcommand{\thealgorithm}{B\arabic{algorithm}}
+\makeatletter\renewcommand{\theHalgorithm}{B\arabic{algorithm}}\makeatother
 
-\subsection{The seven claims.}
-\label{app:claims-table}
+Algorithm~\ref{alg:tsne} puts the method of Section~\ref{sec:method} together. It follows Algorithm~1 of the paper \cite{vandermaaten2008}, except for the sign in line~5 (Section~\ref{sec:discrepancies}). The equation numbers refer to Section~\ref{sec:method}.
 
-Table~\ref{tab:claims} supports the count in Section~\ref{sec:critical}. Verdicts use the paper, our experiments (Sections~\ref{sec:critical} and~\ref{sec:repro}) and later work.
+\begin{algorithm}[H]
+  \caption{t-SNE, adapted from Algorithm~1 of the paper \cite{vandermaaten2008}.}
+  \label{alg:tsne}
+  {\hypersetup{pdfborder={0 0 0}}%
+  \begin{algorithmic}[1]
+    \Require data $x_1, \dots, x_n$; perplexity; iterations $T$; learning rate $\eta$; momentum $\alpha(t)$
+    \Ensure map points $y_1, \dots, y_n$
+    \State compute $p_{j|i}$ at the given perplexity, then $p_{ij}$ \Comment{Equations \eqref{eq:p-cond}, \eqref{eq:joint}}
+    \State sample the starting map $Y^{(0)}$ from $\mathcal{N}(0, 10^{-4} I)$
+    \For{$t = 1$ to $T$}
+      \State compute $q_{ij}$ and the gradient $\partial C / \partial Y$ \Comment{Equations \eqref{eq:q-t}, \eqref{eq:grad-t}}
+      \State $Y^{(t)} = Y^{(t-1)} - \eta \, \partial C / \partial Y + \alpha(t) \, (Y^{(t-1)} - Y^{(t-2)})$ \Comment{minus, not plus}
+    \EndFor
+  \end{algorithmic}}
+\end{algorithm}
 
-\begin{table}[!h]
-\centering\footnotesize
-\caption{Seven claims, how the paper supports them, and our verdict.}
-\label{tab:claims}
-\begin{tabular}{@{}>{\raggedright}p{0.25\linewidth}>{\raggedright}p{0.25\linewidth}>{\raggedright}p{0.27\linewidth}>{\raggedright\arraybackslash}p{0.125\linewidth}@{}}
-\toprule
-Claim (where) & Paper's evidence & What we add & Verdict \\
-\midrule
-1. Better than other techniques (abstract, \S7) & 40 maps, one setting per rival (Table~1 of the paper) & better at neighbours than three rivals; PCA better at sizes & by eye \\
-2. Captures local structure (\S1) & 1-NN error 5.13\% on the map, 5.75\% on pixels (\S5) & 5.9\% against 6.0\% on MNIST; Olivetti slightly worse than raw & holds, if A1 holds \\
-3. Less crowding (abstract, \S3) & cause explained; maps judged by eye & Gaussian map kernel: 1-NN error 1.9\% $\to$ 8.2\% & holds \\
-4. Many scales in one map (abstract) & pictures (Fig.~7) & sizes and gaps distorted (Figure~\ref{fig:sizes}) & by eye \\
-5. Easier to optimise than SNE (abstract, \S3.3) & argued from the gradient & not tested: we did not run SNE & not tested \\
-6. Quality stable between runs (\S6.2) & stated, no runs shown & five seeds on digits: $2.1\pm0.1\%$, layout moves & not tested by the paper \\
-7. Very large data sets (abstract, \S5) & 6{,}000 of 60{,}000 digits drawn (Fig.~7) & not reproduced & by eye \\
-\bottomrule
-\end{tabular}
-\end{table}
 
-\subsection{The synthetic-cluster test.}
-\label{app:sizes}
-
-Figure~\ref{fig:sizes} backs limitation L1 and Extension~(3) in Section~\ref{sec:critical}: on clusters whose sizes and gaps are known, it compares what PCA and t-SNE draw.
-
-\begin{figure}[!h]
-  \begin{minipage}[c]{0.52\linewidth}
-    \includegraphics[width=\linewidth]{B4_sizes_gaps.pdf}
-  \end{minipage}\hfill
-  \begin{minipage}[c]{0.46\linewidth}
-    \footnotesize\setlength{\tabcolsep}{3pt}\centering
-    \begin{tabular}{@{}lcccc@{}}
-      \toprule
-      & true & PCA & t-SNE & $\sigma_i$ \\
-      \midrule
-      width B/A & 5.1 & 5.4 & \textbf{1.4} & 4.1 \\
-      width C/A & 5.1 & 5.5 & \textbf{1.0} & 5.0 \\
-      gap BC/AB & 5.2 & 5.2 & \textbf{3.4} & -- \\
-      \midrule
-      1-NN error (digits) & 2.5\% & 42.5\% & \textbf{1.9\%} & -- \\
-      \bottomrule
-    \end{tabular}
-  \end{minipage}
-  \caption{Our results: three synthetic 10-D clusters A, B, C with known sizes (one run). Widths and gaps are ratios between clusters; the $\sigma_i$ column is the ratio of the clusters' median bell widths from step~1. Last row: 1-NN error on the small digits set (1{,}797 images; true = raw pixels). PCA keeps sizes and gaps, t-SNE keeps neighbours.}
-  \label{fig:sizes}
-\end{figure}
-
-\paragraph{How it was made.} Three Gaussian clusters of 200 points in 10-D: A has standard deviation 1, B and C have 5, and the centres lie at distances 10 (A to B) and 50 (B to C). t-SNE uses our implementation, perplexity 30, no PCA, seed 0. Width is the mean distance of a cluster's points to their centre; gap is the distance between centres; the $\sigma_i$ column is the ratio of the clusters' median $\sigma_i$. Pairs that join B and C hold less than $10^{-6}$ of the total mass of $P$. The $\sigma_i$ ratio for B/A (4.1) is below the true 5.1 because B overlaps A, so some neighbours of B's points lie in the tight cluster.
-
-\clearpage
 \section{The paper's other maps}
 \label{app:paper-maps}
 \appendixnumbering{C}
@@ -464,9 +433,82 @@ Figure~\ref{fig:sizes} backs limitation L1 and Extension~(3) in Section~\ref{sec
 \end{figure}
 
 \clearpage
+
+\section{The paper's claims, and the synthetic-cluster test}
+\label{app:claims}
+\appendixnumbering{D}
+
+\subsection{The seven claims.}
+\label{app:claims-table}
+
+Table~\ref{tab:claims} supports the count in Section~\ref{sec:critical}. Verdicts use the paper, our experiments (Sections~\ref{sec:critical} and~\ref{sec:repro}) and later work.
+
+\begin{table}[!h]
+\centering\footnotesize
+\caption{Seven claims, how the paper supports them, and our verdict.}
+\label{tab:claims}
+\begin{tabular}{@{}>{\raggedright}p{0.25\linewidth}>{\raggedright}p{0.25\linewidth}>{\raggedright}p{0.27\linewidth}>{\raggedright\arraybackslash}p{0.125\linewidth}@{}}
+\toprule
+Claim (where) & Paper's evidence & What we add & Verdict \\
+\midrule
+1. Better than other techniques (abstract, \S7) & 40 maps, one setting per rival (Table~1 of the paper) & better at neighbours than three rivals; PCA better at sizes & by eye \\
+2. Captures local structure (\S1) & 1-NN error 5.13\% on the map, 5.75\% on pixels (\S5) & 5.9\% against 6.0\% on MNIST; Olivetti slightly worse than raw & holds, if A1 holds \\
+3. Less crowding (abstract, \S3) & cause explained; maps judged by eye & Gaussian map kernel: 1-NN error 1.9\% $\to$ 8.2\% & holds \\
+4. Many scales in one map (abstract) & pictures (Fig.~7) & sizes and gaps distorted (Figure~\ref{fig:sizes}) & by eye \\
+5. Easier to optimise than SNE (abstract, \S3.3) & argued from the gradient & not tested: we did not run SNE & not tested \\
+6. Quality stable between runs (\S6.2) & stated, no runs shown & five seeds on digits: $2.1\pm0.1\%$, layout moves & not tested by the paper \\
+7. Very large data sets (abstract, \S5) & 6{,}000 of 60{,}000 digits drawn (Fig.~7) & not reproduced & by eye \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The synthetic-cluster test.}
+\label{app:sizes}
+
+Figure~\ref{fig:sizes} backs limitation L1 and Extension~(3) in Section~\ref{sec:critical}: on clusters whose sizes and gaps are known, it compares what PCA and t-SNE draw.
+
+\begin{figure}[!h]
+  \begin{minipage}[c]{0.52\linewidth}
+    \includegraphics[width=\linewidth]{B4_sizes_gaps.pdf}
+  \end{minipage}\hfill
+  \begin{minipage}[c]{0.46\linewidth}
+    \footnotesize\setlength{\tabcolsep}{3pt}\centering
+    \begin{tabular}{@{}lcccc@{}}
+      \toprule
+      & true & PCA & t-SNE & $\sigma_i$ \\
+      \midrule
+      width B/A & 5.1 & 5.4 & \textbf{1.4} & 4.1 \\
+      width C/A & 5.1 & 5.5 & \textbf{1.0} & 5.0 \\
+      gap BC/AB & 5.2 & 5.2 & \textbf{3.4} & -- \\
+      \midrule
+      1-NN error (digits) & 2.5\% & 42.5\% & \textbf{1.9\%} & -- \\
+      \bottomrule
+    \end{tabular}
+  \end{minipage}
+  \caption{Our results: three synthetic 10-D clusters A, B, C with known sizes (one run). Widths and gaps are ratios between clusters; the $\sigma_i$ column is the ratio of the clusters' median bell widths from step~1. Last row: 1-NN error on the small digits set (1{,}797 images; true = raw pixels). PCA keeps sizes and gaps, t-SNE keeps neighbours.}
+  \label{fig:sizes}
+\end{figure}
+
+\paragraph{How it was made.} Three Gaussian clusters of 200 points in 10-D: A has standard deviation 1, B and C have 5, and the centres lie at distances 10 (A to B) and 50 (B to C). t-SNE uses our implementation, perplexity 30, no PCA, seed 0. Width is the mean distance of a cluster's points to their centre; gap is the distance between centres; the $\sigma_i$ column is the ratio of the clusters' median $\sigma_i$. Pairs that join B and C hold less than $10^{-6}$ of the total mass of $P$. The $\sigma_i$ ratio for B/A (4.1) is below the true 5.1 because B overlaps A, so some neighbours of B's points lie in the tight cluster.
+
+\clearpage
+
+\section{Method map of our critical analysis}
+\label{app:map}
+\appendixnumbering{E}
+
+Figure~\ref{fig:map} is the map for Section~\ref{sec:critical}. The boxes are the steps of t-SNE (our Section~\ref{sec:method}); each label below a box is a strength, assumption or limitation that comes from that step, and the dashed strip holds those about the paper as a whole.
+
+\begin{figure}[!h]
+  \centering
+  \includegraphics[width=\linewidth]{B4_method_map.pdf}
+  \caption{Our critical analysis at a glance (our figure): the steps of t-SNE, and each strength (S), assumption (A) and limitation (L) under the step that causes it. The dot shows its state today, and $^*$ marks those the authors admit themselves.}
+  \label{fig:map}
+\end{figure}
+
 \section{Our maps}
 \label{app:our-maps}
-\appendixnumbering{D}
+\appendixnumbering{F}
 
 \begin{figure}[!ht]
   \centering
@@ -535,9 +577,10 @@ Figure~\ref{fig:sizes} backs limitation L1 and Extension~(3) in Section~\ref{sec
 \end{figure}
 
 \clearpage
+
 \section{Experiments beyond the paper}
 \label{app:beyond}
-\appendixnumbering{E}
+\appendixnumbering{G}
 
 \begin{table}[!ht]
   \caption{Our five experiments beyond the paper. Percentages are 1-NN errors on the small digits set.}
@@ -556,44 +599,5 @@ Figure~\ref{fig:sizes} backs limitation L1 and Extension~(3) in Section~\ref{sec
     \bottomrule
   \end{tabular}
 \end{table}
-
-\section{The t-SNE algorithm}
-\label{app:algorithm}
-\appendixnumbering{F}
-\setcounter{algorithm}{0}
-\renewcommand{\thealgorithm}{F\arabic{algorithm}}
-\makeatletter\renewcommand{\theHalgorithm}{F\arabic{algorithm}}\makeatother
-
-Algorithm~\ref{alg:tsne} puts the method of Section~\ref{sec:method} together. It follows Algorithm~1 of the paper \cite{vandermaaten2008}, except for the sign in line~5 (Section~\ref{sec:discrepancies}). The equation numbers refer to Section~\ref{sec:method}.
-
-\begin{algorithm}[H]
-  \caption{t-SNE, adapted from Algorithm~1 of the paper \cite{vandermaaten2008}.}
-  \label{alg:tsne}
-  {\hypersetup{pdfborder={0 0 0}}%
-  \begin{algorithmic}[1]
-    \Require data $x_1, \dots, x_n$; perplexity; iterations $T$; learning rate $\eta$; momentum $\alpha(t)$
-    \Ensure map points $y_1, \dots, y_n$
-    \State compute $p_{j|i}$ at the given perplexity, then $p_{ij}$ \Comment{Equations \eqref{eq:p-cond}, \eqref{eq:joint}}
-    \State sample the starting map $Y^{(0)}$ from $\mathcal{N}(0, 10^{-4} I)$
-    \For{$t = 1$ to $T$}
-      \State compute $q_{ij}$ and the gradient $\partial C / \partial Y$ \Comment{Equations \eqref{eq:q-t}, \eqref{eq:grad-t}}
-      \State $Y^{(t)} = Y^{(t-1)} - \eta \, \partial C / \partial Y + \alpha(t) \, (Y^{(t-1)} - Y^{(t-2)})$ \Comment{minus, not plus}
-    \EndFor
-  \end{algorithmic}}
-\end{algorithm}
-
-
-\section{The Gaussian and Student-t kernels}
-\label{app:kernels}
-\appendixnumbering{G}
-
-Figure~\ref{fig:kernels} illustrates the heavy tail of the Student-t used for the map similarities in Section~\ref{sec:method}.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.58\linewidth]{ours_gaussian_vs_student.pdf}
-  \caption{\emph{Our figure.} Gaussian $e^{-d^2}$ and Student-t $(1+d^2)^{-1}$ similarity (unnormalised) against map distance $d=\|y_i-y_j\|$. For the same similarity of 0.1, the Gaussian places two points about 1.5 apart and the Student-t places them 3 apart.}
-  \label{fig:kernels}
-\end{figure}
 
 \end{document}
