@@ -116,7 +116,7 @@ C=\sum_i \mathrm{KL}(P_i\,\|\,Q_i)=\sum_{i,j} p_{j|i}\log\frac{p_{j|i}}{q_{j|i}}
 \frac{\partial C}{\partial y_i}=2\sum_j\left(p_{j|i}-q_{j|i}+p_{i|j}-q_{i|j}\right)(y_i-y_j)
 \label{eq:cost-sne}
 \end{equation}
-The cost function is a KL divergence and measures how well $q_{j|i}$ models $p_{j|i}$. $P$ is fixed so the KL is the cross-entropy plus constant, therefore the same family as logistic regression's negative log-likelihood cost. It is minimised by gradient descent \course{gradient descent, L07; logistic regression's negative log-likelihood, L07}.
+The cost function is a KL divergence and measures how well $q_{j|i}$ models $p_{j|i}$. $P$ is fixed so the KL is the cross-entropy plus constant, therefore the same family as logistic regression's negative log-likelihood cost. It is minimised by gradient descent \course{gradient descent and logistic regression's negative log-likelihood, L07}.
 
 There are three problems with SNE. Firstly, the cost is asymmetric: large $p$/ small $q$ is costly, small $p$/ large $q$ is cheap, hence the cost focuses on the local structure over the global structure of the map. Secondly, the cost function is difficult to optimise with many local minima, a four-term gradient, and it needs simulated annealing and careful tuning to reach a good map. Thirdly, due to the curse of dimensionality there is $\times$1000 more room in a 10-D data space than a 2-D map for moderately distanced data points, hence these points are crushed together in the centre of the map~\cite{vandermaaten2008} \course{curse of dimensionality, L01}.
 
@@ -181,8 +181,8 @@ The evidence is strong visually but thin as numerical proof. Of the paper's seve
 
 \section{Critical analysis}
 \label{sec:critical}
-% Owner: B4, Jelisaveta. Figures 1-2 and the claims table are in Appendices D-E.
-% Conventions: \S = a section of the paper; "our Section" = this report; "step" = Figure 1.
+% Owner: B4, Jelisaveta. Figures D1 and E1 and the claims table (Table D1) are in Appendices D-E.
+% Conventions: \S = a section of the paper; "our Section" = this report; "step" = Figure B1.
 
 
 We judge the paper in its own order, from the argument to what came after. From the method on, we name its strengths (S), the assumptions it never checks (A) and its limitations (L), each backed by the paper, our experiments or later work. The steps (``step~1'' to ``step~4'') are those of Figure~\ref{fig:loop} (Appendix~\ref{app:algorithm}), and Figure~\ref{fig:map} (Appendix~\ref{app:map}) places each label under its step; both are best read alongside this section; \S\ refers to the paper.
@@ -338,7 +338,7 @@ Figure~\ref{fig:kernels} illustrates the heavy tail of the Student-t used for th
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.58\linewidth]{ours_gaussian_vs_student.pdf}
-  \caption{\emph{Our figure.} Gaussian $e^{-d^2}$ and Student-t $(1+d^2)^{-1}$ similarity (unnormalised) against map distance $d=\|y_i-y_j\|$. For the same similarity of 0.1, the Gaussian places two points about 1.5 apart and the Student-t places them 3 apart.}
+  \caption{Our figure. Gaussian $e^{-d^2}$ and Student-t $(1+d^2)^{-1}$ similarity (unnormalised) against map distance $d=\|y_i-y_j\|$. For the same similarity of 0.1, the Gaussian places two points about 1.5 apart and the Student-t places them 3 apart.}
   \label{fig:kernels}
 \end{figure}
 
@@ -355,7 +355,7 @@ Figure~\ref{fig:loop} draws the same method as a loop of four steps; Section~\re
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth]{B4_method_loop.pdf}
-  \caption{\emph{Our figure.} The t-SNE method as four steps, following Algorithm~\ref{alg:tsne}: step~1 builds $P$ from the data (Equations \eqref{eq:p-cond}, \eqref{eq:joint}), step~2 builds $Q$ from the map (Equation~\eqref{eq:q-t}), step~3 compares them, and step~4 moves the map points down the gradient (Equation~\eqref{eq:grad-t}). Steps 2--4 repeat until the map settles.}
+  \caption{Our figure. The t-SNE method as four steps, following Algorithm~\ref{alg:tsne}: step~1 builds $P$ from the data (Equations \eqref{eq:p-cond}, \eqref{eq:joint}), step~2 builds $Q$ from the map (Equation~\eqref{eq:q-t}), step~3 compares them, and step~4 moves the map points down the gradient (Equation~\eqref{eq:grad-t}). Steps 2--4 repeat until the map settles.}
   \label{fig:loop}
 \end{figure}
 
