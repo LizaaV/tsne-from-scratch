@@ -82,7 +82,7 @@
 
 \begin{abstract}
   % Adel, from her Google Doc ``Adel Part Report'' (version of 27 Nov), wording unchanged.
-  Visualizing high-dimensional data -- such as 784-dimensional MNIST digits -- needs a 2-D map that keeps each point's neighbours together, but earlier methods crowd points or fail on real data. Van der Maaten and Hinton (2008) propose t-SNE, which fixes crowding with a symmetric cost and a heavy-tailed Student-t distribution in the map. We judge the argument and method sound, but the broader claims rest on pictures judged by eye, and the maps show neighbourhoods, not cluster sizes or gaps. Our reimplementation on MNIST, Olivetti faces and COIL-20 gives 1-NN error of 5.9\%, 6.3\% and 3.6\%, far below Sammon mapping, Isomap and LLE (18.8--64.3\%).
+  Visualizing high-dimensional data -- such as 784-dimensional MNIST digits -- needs a 2-D map that keeps each point's neighbours together, but earlier methods crowd points or fail on real data. Van der Maaten and Hinton (2008) propose t-SNE, which fixes crowding with a symmetric cost and a heavy-tailed Student-t distribution in the map. We judge the argument and method, but the broader claims rest on pictures judged by eye, and the maps show neighbourhoods rather than sizes or gaps. Our reimplementation on MNIST, Olivetti faces and COIL-20 gives 1-NN error of 5.9\%, 6.3\% and 3.6\%, far below Sammon mapping, Isomap and LLE (18.8--64.3\%).
 \end{abstract}
 
 \section{Introduction}
@@ -92,9 +92,9 @@
 
 Many data sets describe each item with hundreds of numbers: a $28 \times 28$ MNIST digit is a point in 784 dimensions and cannot be inspected directly. Van der Maaten and Hinton \cite{vandermaaten2008} address this visualisation problem by mapping points $x_1, \dots, x_n$ in $D$ dimensions to 2-D points $y_1, \dots, y_n$ so that similar items lie close together.
 
-Real data lie near curved, low-dimensional surfaces (manifolds), so local structure, meaning which points are each other's neighbours, matters most. PCA keeps large distances and flattens the data, so points far apart along the surface can land on top of each other. Seven earlier non-linear methods (Sammon mapping, CCA, SNE, Isomap, MVU, LLE and Laplacian Eigenmaps) aim to keep local structure, but according to the paper, on real data most cannot preserve local and global structure in one map.
+Real data lie near curved, low-dimensional surfaces (manifolds), so local structure, meaning which points are each other's neighbours, matters most. PCA keeps large distances and flattens the data, so points far apart along the surface can land on top of each other. Seven earlier non-linear methods (Sammon, CCA, SNE, Isomap, MVU, LLE and Laplacian Eigenmaps) aim to keep local structure, but according to the paper, on real data most cannot preserve local and global structure in one map.
 
-The paper makes three contributions. (1) t-SNE, a variant of SNE \cite{hinton2002} that is easier to optimize through a symmetric cost and alleviates crowding with a heavy-tailed Student-t distribution in the map. (2) A random-walk version for data sets much larger than 10,000 points. (3) Experiments against the seven techniques above on five data sets, where t-SNE's maps are clearly better on almost all.
+The paper makes three contributions. (1) t-SNE, a variant of SNE \cite{hinton2002} that is easier to optimize through a symmetric cost and alleviates crowding with a heavy-tailed Student-t distribution. (2) A random-walk version for data sets much larger than 10,000 points. (3) Experiments against the seven techniques above on five data sets, where t-SNE's maps are clearly better on almost all.
 
 \section{Method}
 \label{sec:method}
@@ -268,7 +268,7 @@ The paper prints its update rule (its Algorithm~1) with a plus sign in front of 
 \section{Conclusion}
 \label{sec:conclusion}
 % Adel, from her Google Doc ``Adel Part Report'' (version of 27 Nov), wording unchanged.
-Reproducing t-SNE taught us three things. A map shows which groups exist, not their sizes or distances: a cluster 5 times wider looked only 1.4 times wider. Squashing hundreds of dimensions into two loses less than expected: the map classifies about as well as the raw images (5.9\% against 6.0\% 1-NN error on MNIST). Finally, a model keeps only what its cost rewards; t-SNE keeps neighbours and nothing else.
+Reproducing t-SNE taught us three things. A map shows which groups exist, not their sizes or distances: a cluster 5 times wider looked only 1.4 times wider. Squashing hundreds of dimensions into two loses less than expected: the map classifies about as well as the raw images (5.9\% against 6.0\% 1-NN error on MNIST). A model keeps only what its cost rewards; t-SNE keeps neighbours and nothing else.
 
 % TODO: add the other sources we cite (SNE, Sammon, Isomap, LLE, and the later t-SNE work).
 \begin{thebibliography}{99}
