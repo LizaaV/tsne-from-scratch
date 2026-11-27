@@ -17,6 +17,7 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{float} % [H] keeps a figure exactly where it is written
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{booktabs}
@@ -24,15 +25,39 @@
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
 \usepackage{xcolor}
+\usepackage{enumitem} % compact numbered lists
+\usepackage{algorithm}
+\usepackage{algpseudocode} % pseudocode in Appendix F
+\algrenewcommand\algorithmicrequire{\textbf{Input:}}
+\algrenewcommand\algorithmicensure{\textbf{Output:}}
 
 % Read figures straight from where they are generated (do not copy or edit them there).
 %   resources/figures/            E1-E7, small digits set
 %   submission/outputs/compare3/  the 12 maps on MNIST, Olivetti, COIL-20
 %   submission/outputs/figures/   E8, MNIST-6000
-%   report/figures/               B4 critical analysis (method map; sizes and gaps), drawn in TikZ, sources in figures/source/
-\graphicspath{{../../resources/figures/}{../outputs/compare3/}{../outputs/figures/}{figures/}}
+%   submission/report/figures/   figures taken from the paper (paper_*) our two illustrations (ours_*, drawn by make_illustrations.py)
+%                                and the two B4 figures (B4_*, drawn in TikZ, sources in figures/source/)
+\graphicspath{{figures/}{../../resources/figures/}{../outputs/compare3/}{../outputs/figures/}}
 
-\title{Reproducing and Evaluating t-SNE for High-Dimensional Data Visualization}
+% Remove the word ``Preprint.'' from the foot of page 1. The preprint option itself stays, as the brief requires.
+\makeatletter\renewcommand{\@noticestring}{}\makeatother
+% Subsections as numbered run-in headings ("3.1 Data sets. Text ..."), in the style of the
+% template's own \paragraph. The closing period is part of each title. Delete the next three lines
+% to get the template's headings back.
+\makeatletter
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}{1.5ex \@plus 0.5ex \@minus 0.2ex}{-1em}{\normalsize\bf}}
+\makeatother
+
+% One numbering scheme for every appendix: figures and tables are numbered by appendix letter (A1, B1, ...).
+\newcommand{\appendixnumbering}[1]{%
+  \setcounter{figure}{0}\setcounter{table}{0}%
+  \renewcommand{\thefigure}{#1\arabic{figure}}\renewcommand{\theHfigure}{#1\arabic{figure}}%
+  \renewcommand{\thetable}{#1\arabic{table}}\renewcommand{\theHtable}{#1\arabic{table}}}
+
+% Do not stretch the space between paragraphs and figures to fill a page.
+\raggedbottom
+
+\title{Visualizing Data using t-SNE: Study, Critical Analysis and Partial Reproduction}
 
 % TODO (each member): check the spelling of your name; add an email line if we want one.
 \author{%
@@ -54,27 +79,124 @@
 \maketitle
 
 \begin{abstract}
-  Visualizing high-dimensional data, such as 784-dimensional MNIST digits, needs a 2-D map that keeps each point's neighbours together, but earlier methods crowd points together or fail on real data. van der Maaten and Hinton~\cite{vandermaaten2008} propose t-SNE, which fixes this crowding with a symmetric cost and a heavy-tailed Student-t distribution in the map. We judge the argument and method sound and the core claims supported, but the broader claims rest on pictures judged by eye, and the maps show neighbourhoods, not cluster sizes or gaps. We reimplemented t-SNE from scratch on MNIST, Olivetti faces and COIL-20: its 1-NN error is 5.9\%, 6.3\% and 3.6\%, matching raw pixels on MNIST (6.0\%) and far below Sammon mapping, Isomap and LLE (18.8--64.3\%).
+  % Adel, from her Google Doc ``Adel Part Report'' (version of 27 Nov), wording unchanged.
+  Visualizing high-dimensional data -- such as 784-dimensional MNIST digits -- needs a 2-D map that keeps each point's neighbours together, but earlier methods crowd points or fail on real data. Van der Maaten and Hinton (2008) propose t-SNE, which fixes crowding with a symmetric cost and a heavy-tailed Student-t distribution in the map. We judge the argument and method sound, but the broader claims rest on pictures judged by eye, and the maps show neighbourhoods, not cluster sizes or gaps. Our reimplementation on MNIST, Olivetti faces and COIL-20 gives 1-NN error of 5.9\%, 6.3\% and 3.6\%, far below Sammon mapping, Isomap and LLE (18.8--64.3\%).
 \end{abstract}
 
 \section{Introduction}
+\label{sec:intro}
+% Owner: B1, Adel. Text from her Google Doc ``Adel Part Report'' (version of 27 Nov), wording unchanged.
+% Only the citations are converted to the report's numbered style.
 
-Many data sets describe each item with hundreds of numbers: a $28\times28$ MNIST digit is a point in 784 dimensions and cannot be inspected directly. van der Maaten and Hinton~\cite{vandermaaten2008} address this visualisation problem: map points $x_1,\dots,x_n$ in $D$ dimensions to 2-D points $y_1,\dots,y_n$ so that similar items lie close together. The task is unsupervised; class labels only colour the final plot.
+Many data sets describe each item with hundreds of numbers: a $28 \times 28$ MNIST digit is a point in 784 dimensions and cannot be inspected directly. Van der Maaten and Hinton \cite{vandermaaten2008} address this visualisation problem by mapping points $x_1, \dots, x_n$ in $D$ dimensions to 2-D points $y_1, \dots, y_n$ so that similar items lie close together.
 
-Real data lie near curved, low-dimensional surfaces (manifolds), so local structure, meaning which points are each other's neighbours, matters most. PCA keeps large distances and flattens the data, so points far apart along the surface can land on top of each other. Seven earlier non-linear methods (Sammon mapping, CCA, SNE, Isomap, MVU, LLE and Laplacian Eigenmaps) aim to keep local structure. According to the paper, they work on artificial data, but on real data most cannot preserve local and global structure in one map.
+Real data lie near curved, low-dimensional surfaces (manifolds), so local structure, meaning which points are each other's neighbours, matters most. PCA keeps large distances and flattens the data, so points far apart along the surface can land on top of each other. Seven earlier non-linear methods (Sammon mapping, CCA, SNE, Isomap, MVU, LLE and Laplacian Eigenmaps) aim to keep local structure, but according to the paper, on real data most cannot preserve local and global structure in one map.
 
-The paper makes three contributions. (1) t-SNE, a variant of SNE~\cite{hinton2002} that is easier to optimise through a symmetric cost and alleviates crowding with a heavy-tailed Student-t distribution in the map. (2) A random-walk version for data sets much larger than 10,000 points. (3) Experiments against the seven techniques above on five data sets, where t-SNE's maps are clearly better on almost all.
+The paper makes three contributions. (1) t-SNE, a variant of SNE \cite{hinton2002} that is easier to optimize through a symmetric cost and alleviates crowding with a heavy-tailed Student-t distribution in the map. (2) A random-walk version for data sets much larger than 10,000 points. (3) Experiments against the seven techniques above on five data sets, where t-SNE's maps are clearly better on almost all.
 
 \section{Method}
 \label{sec:method}
-% Owner: B2, Anna Claire. Target: 1.0 page.
-% SNE, symmetric SNE, the crowding problem, Student-t kernel, gradient, optimisation tricks.
-% Connections to course topics.
+% Owner: B2, Anna Claire. Text taken from her Google Doc ``B2 REPORT DRAFT: Method'' (version of 26 Nov).
+% Her bracketed notes asked for equations, a figure and pseudocode; those are added where she marked them.
+
+\subsection{Stochastic Neighbour Embedding.}
+t-SNE is based on Stochastic Neighbour Embedding. SNE converts high dimensional data points $x$ into pairwise similarities represented as the conditional probability that $x_i$ is neighbours with $x_j$.
+\begin{equation}
+  p_{j|i} = \frac{\exp\!\left(-\|x_i - x_j\|^2 / 2\sigma_i^2\right)}{\sum_{k \neq i} \exp\!\left(-\|x_i - x_k\|^2 / 2\sigma_i^2\right)}, \qquad p_{i|i} = 0 .
+  \label{eq:p-cond}
+\end{equation}
+$p_{j|i}$ is proportional to a Gaussian distribution centred at $x_i$, where SNE performs binary search to find $\sigma_i$ so every point has the same perplexity.
+\begin{equation}
+  \mathrm{Perp}(P_i) = 2^{H(P_i)}, \qquad H(P_i) = -\sum_j p_{j|i} \log_2 p_{j|i} .
+  \label{eq:perp}
+\end{equation}
+This allows a narrow width for dense regions and wide for sparse regions. The perplexity is chosen; in this paper, perplexity = 40. $P$ acts as a soft kNN graph, where the perplexity is the effective number of neighbours $k$. \emph{Course link: kNN (Lecture~1); Gaussian (RBF) kernel (Lecture~2).}
+
+The map points $y$ are also converted into similarities, $q_{j|i}$. They too are proportional to Gaussian distribution but the width $\sigma_i$ is fixed and the same for every point.
+\begin{equation}
+  q_{j|i} = \frac{\exp\!\left(-\|y_i - y_j\|^2\right)}{\sum_{k \neq i} \exp\!\left(-\|y_i - y_k\|^2\right)} .
+  \label{eq:q-cond}
+\end{equation}
+The cost function is a KL divergence and measures how well $q_{j|i}$ models $p_{j|i}$. $P$ is fixed so the KL is the cross-entropy plus constant, therefore the same family as logistic regression's log likelihood cost. The cost is minimised using the gradient descent method. \emph{Course link: gradient descent; logistic regression's log-likelihood.}
+\begin{align}
+  C &= \sum_i \mathrm{KL}(P_i \,\|\, Q_i) = \sum_i \sum_j p_{j|i} \log \frac{p_{j|i}}{q_{j|i}}, \label{eq:cost-sne} \\
+  \frac{\partial C}{\partial y_i} &= 2 \sum_j \left(p_{j|i} - q_{j|i} + p_{i|j} - q_{i|j}\right)(y_i - y_j) . \label{eq:grad-sne}
+\end{align}
+
+There are three problems with SNE. Firstly, the cost is asymmetric: large $p$/small $q$ is costly, small $p$/large $q$ is cheap, hence focuses on the local structure over the global structure of the map. Secondly, the cost function is difficult to optimise with many local minima, a four-term gradient, and it needs simulated annealing and careful tuning to reach a good map. Thirdly, due to the curse of dimensionality there is $\times 1000$ more room in a 10-D map than a 2-D map, hence too little room for moderately distanced points so they are crushed together in the centre of the map. \emph{Course link: curse of dimensionality (Lecture~1).}
+
+\subsection{Symmetric SNE.}
+The symmetric SNE uses the joint probability distribution of $p$ and $q$.
+\begin{equation}
+  p_{ij} = \frac{p_{j|i} + p_{i|j}}{2n}, \qquad
+  q_{ij} = \frac{\exp\!\left(-\|y_i - y_j\|^2\right)}{\sum_{k \neq l} \exp\!\left(-\|y_k - y_l\|^2\right)} .
+  \label{eq:joint}
+\end{equation}
+$p_{ij}$ is computed this way, rather than one Gaussian over all pairs, so that $\sum_j p_{ij} > \frac{1}{2n}$ for every point. This allows outliers to count, which would have originally had a tiny $p_{ij}$.
+\begin{equation}
+  \frac{\partial C}{\partial y_i} = 4 \sum_j \left(p_{ij} - q_{ij}\right)(y_i - y_j) .
+  \label{eq:grad-ssne}
+\end{equation}
+The symmetric SNE improves the optimisation of the cost function due to its simpler gradient; however, issues remain, like the crowding problem.
+
+\subsection{The crowding problem and t-SNE.}
+To alleviate the crowding problem, t-SNE uses the Student-t distribution rather than the Gaussian to compute $q$ ($p$ uses the Gaussian). As shown by Figure~\ref{fig:kernels}, Student-t gives far points in the map more room, reducing the crowding problem.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.58\linewidth]{ours_gaussian_vs_student.pdf}
+  \caption{Our own illustration. The Gaussian and the Student-t curve used for similarities in the map. For the same similarity, the Student-t places two points further apart.}
+  \label{fig:kernels}
+\end{figure}
+
+Here are the new $q_{ij}$ and gradient descent equations ($p_{ij}$ and the cost remain unchanged).
+\begin{align}
+  q_{ij} &= \frac{\left(1 + \|y_i - y_j\|^2\right)^{-1}}{\sum_{k \neq l} \left(1 + \|y_k - y_l\|^2\right)^{-1}}, \label{eq:q-t} \\
+  \frac{\partial C}{\partial y_i} &= 4 \sum_j \left(p_{ij} - q_{ij}\right)(y_i - y_j)\left(1 + \|y_i - y_j\|^2\right)^{-1} . \label{eq:grad-t}
+\end{align}
+This results in a new factor added to the gradient descent which makes forces in the map fade with distance but not vanish, allowing distant groups to still interact. Annealing is now not necessary due to these long range forces. t-SNE fixes the crowding problem, makes the cost easier to optimize, and partly fixes SNE's focus on local structure over global structure problem.
+
+\subsection{Optimisation and large data sets.}
+\textcolor{red}{[Anna Claire: optimisation part still to be added here.]}
+Applying t-SNE to large data sets maps a subset of points, called `landmark points', but uses random walks through all the data to compute their similarities.
 
 \section{Experiments in the paper}
 \label{sec:evidence}
-% Owner: B3, Alex. Target: 0.5 page.
-% Setup (MNIST, Olivetti, COIL-20), baselines, what the evidence supports.
+% Owner: B3, Alex. Target: 0.45 page (about 220 words and one small figure).
+
+\subsection{Data sets.}
+The paper's main text \cite{vandermaaten2008} covers three image data sets: 6,000 random MNIST digits \cite{lecun1998} (784 pixels), 400 Olivetti face photos \cite{samaria1994} of 40 people, and 1,440 COIL-20 images \cite{nene1996} of 20 objects from 72 angles. Two more appear only in its supplement.
+
+\subsection{Setup.}
+t-SNE is compared with Sammon mapping \cite{sammon1969}, Isomap \cite{tenenbaum2000} and LLE \cite{roweis2000}; four more techniques, including SNE \cite{hinton2002}, are only in the supplement. All receive the same input, reduced to 30 dimensions with PCA (Lecture~3), with one setting each: perplexity 40 (t-SNE), $k = 12$ (Isomap, LLE), 500 Newton iterations (Sammon). Each technique turns each data set into a 2-D map, which gives twelve maps to compare.
+
+\subsection{Results.}
+The results are maps that are judged by eye. Class labels are not used to build a map, only to colour its points afterwards. Figure~\ref{fig:paper-mnist-ab} shows the paper's MNIST maps for t-SNE and Sammon mapping.
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}[t]{0.46\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig2a_mnist_tsne.png}\\[-2pt]
+    {\footnotesize (a) t-SNE}
+  \end{minipage}\hspace{0.04\linewidth}%
+  \begin{minipage}[t]{0.46\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig2b_mnist_sammon.png}\\[-2pt]
+    {\footnotesize (b) Sammon mapping}
+  \end{minipage}
+  \caption{MNIST, 6,000 digits. Reproduced from van der Maaten and Hinton \cite{vandermaaten2008}, Figure~2.}
+  \label{fig:paper-mnist-ab}
+\end{figure}
+
+t-SNE (a) gives ten clusters with clear gaps between them. Sammon mapping (b) gives one filled ball, demonstrating the crowding problem described in Section~\ref{sec:method}.
+
+Isomap and LLE (Figure~\ref{fig:paper-mnist-cd}) also fail to separate the digits, for different reasons. Isomap mainly preserves large distances, so the overall shape survives but neighbours do not. LLE piles most points in the centre, which the paper traces to its weak guard against collapse.
+
+On faces (Figure~\ref{fig:paper-olivetti}) t-SNE groups most people's photos, and Sammon mapping comes closest of the rivals. On objects (Figure~\ref{fig:paper-coil20}) t-SNE draws many objects as a closed loop, because each object is photographed through a full turn.
+
+In a second experiment, which uses all 60,000 MNIST digits (Figure~\ref{fig:paper-randomwalk}), a 1-nearest-neighbour (1-NN) classifier (Lecture~1) has an error of 5.13\% on the 2-D map against 5.75\% on the raw pixels, so the map keeps nearest neighbours about as well as 784 dimensions.
+
+\subsection{How strong the evidence is.}
+The evidence is strong visually but thin as numerical proof. Of the paper's seven claims (Table~\ref{tab:claims}), only claim~2 is measured. Claims~1, 3, 4 and~7 rest on the maps alone, and claims~5 and~6 have no reported experiment. The evidence is strongest in the size and consistency of the visual gap across digits, faces and objects, and thinnest in measurement, where only t-SNE is scored and each method is shown once with one setting. Section~\ref{sec:reproduction} puts numbers on claims~2, 3 and~6.
 
 \section{Critical analysis}
 \label{sec:critical}
@@ -84,47 +206,124 @@ The paper makes three contributions. (1) t-SNE, a variant of SNE~\cite{hinton200
 
 We judge the paper in its own order: the argument, the method, the experiments and claims, and what came after. From the method on, we name its strengths (S), the assumptions it never checks (A) and its limitations (L), each backed by the paper, our own experiments or later work. These labels, and the steps of the method we refer to (``step~1'' to ``step~4''), come from Figure~\ref{fig:map} in Appendix~\ref{app:map}, which places each S, A and L under the step that causes it; we recommend reading this section alongside it. References with \S\ are to sections of the paper; ``our Section'' and ``Appendix'' refer to this report, and numbers marked ``ours'' come from our own experiments.
 
-\paragraph{1. The argument: is it sound?}
+\subsection{The argument: is it sound?}
 The main problem is crowding, as SNE and Sammon mapping squeeze points at moderate distance into the middle of the map. The authors show its cause, too little room in a 2-D map (\S3.2), and fix that cause with a heavy-tailed curve on the map (\S3.3), whereas the earlier fix they discuss, UNI-SNE, only eased the symptom. Our own test supports the fix: with a Gaussian curve instead, the 1-NN error on digits rises from 1.9\% to 8.2\% (our Section~\ref{sec:repro}). Each link follows from the last and the fix targets the cause, not its effect, so the argument is sound.
 
-\paragraph{2. The method: does it work?}
+\subsection{The method: does it work?}
 \textbf{The central trade-off.} t-SNE is built to keep neighbours, not distances, through two design choices (our Section~\ref{sec:method}): step~1 gives every point about the same number of neighbours, set by one fixed perplexity, and the cost in step~3 punishes a lost neighbour heavily but barely weighs far-apart pairs. Because far pairs barely count, the heavy-tailed curve of step~2 can push moderately distant points apart without penalty, so t-SNE fixes crowding at its cause (S1). Because a lost neighbour costs the most, t-SNE keeps true neighbours best (S2): its map classifies about as well as the raw images (1-NN error 5.13\% against 5.75\% in \S5; ours 5.92\% against 6.03\%) and far better than its rivals (our Section~\ref{sec:repro}). The same two choices cause the main limitation: group sizes and gaps are distorted (L1). With equal neighbour counts, a wide group and a tight group look alike in $P$, so sizes are lost; with far pairs barely counting, the map may place distant groups almost anywhere, so gaps are lost. On synthetic clusters, one 5.1 times as wide as another is drawn the same size, while PCA keeps the ratio (Figure~\ref{fig:sizes}, Appendix~\ref{app:claims}). The authors present this design only as an advantage (\S2); we see L1 as the price of S1 and S2.
 
 \textbf{Assumptions.} The map is built from the neighbours chosen in step~1, so if they are wrong, the map is wrong too. Step~1 rests on three choices the paper never tests. Cutting the data to 30 dimensions with PCA (Lecture~3) assumes this loses nothing important (A3, \S4.2), yet PCA is linear and can blur curved structure that separates neighbours. Choosing neighbours by straight-line distance assumes that close means similar (A1), yet two face photos of different people in similar light can be closer in pixels than two of the same person; the authors themselves doubt this for faces (\S6.2). Using one perplexity for every point assumes that one neighbour count fits all groups (A2), yet a small group may need fewer neighbours than a large one. Each could fail on real data, so each should be tested (Extension~2).
 
-\textbf{Other strengths and limitations.} t-SNE is also easier to run than SNE (S3), with a simpler gradient and no simulated annealing (\S3.1, \S3.3). Its remaining limitations are practical, and the authors admit them. Because each run starts at random and depends on settings such as the perplexity, the layout changes between runs (L2): across our seeds and perplexities the quality stayed the same (1-NN error 1.9--2.3\%), but the groups moved and changed shape. Using every pair at every step makes it slow on big data (L3, $O(n^2)$); learning no mapping, it cannot add new points (L4); and with the tail's weight set by hand, it is only shown for 2-D and 3-D maps (L5, \S6.2). Overall, the method is strong, with one built-in trade-off: keeping neighbours gives S1 and S2 and causes L1, the maps are only as good as A1--A3 allow, and the other limits concern running it, not what its maps mean; since most were fixed later (part~4), they weigh little against the method.
+\textbf{Other strengths and limitations.} t-SNE is also easier to run than SNE (S3), with a simpler gradient and no simulated annealing (\S3.1, \S3.3). Its remaining limitations are practical, and the authors admit them. Because each run starts at random and depends on settings such as the perplexity, the layout changes between runs (L2): across our seeds and perplexities the quality stayed the same (1-NN error 1.9--2.3\%), but the groups moved and changed shape. Using every pair at every step makes it slow on big data (L3, $O(n^2)$); learning no mapping, it cannot add new points (L4); and with the tail's weight set by hand, it is only shown for 2-D and 3-D maps (L5, \S6.2). Overall, the method is strong, with one built-in trade-off: keeping neighbours gives S1 and S2 and causes L1, the maps are only as good as A1--A3 allow, and the other limits concern running it, not what its maps mean; since most were fixed later (Section~\ref{sec:after}), they weigh little against the method.
 
-\paragraph{3. The experiments and claims: do they hold?}
+\subsection{The experiments and claims: do they hold?}
 \textbf{The experiments.} The experiments are wide and honest (S4): seven rival methods on five data sets, with the weaknesses stated (\S6.2). But they are judged by eye, with no score (L6), one setting per rival. Only \S5 uses a score, the 1-NN error; in our reproduction it is 3.6--6.3\% for t-SNE and 18.8--64.3\% for the three rivals we reran on the three main data sets (our Section~\ref{sec:repro}). The pictures were right, but the paper never measured it.
 
 \textbf{The claims.} Our Section~\ref{sec:evidence} rates the paper's own evidence; adding our own tests, of the paper's seven claims (Appendix~\ref{app:claims}), two hold: true neighbours are kept (measured, as long as A1 holds), and crowding is reduced, shown by eye and backed by our Gaussian test. Three rest only on pictures, with no score: structure at many scales (the paper's Figure~7), very large data sets (one map of 6{,}000 digits) and beating every rival (the side-by-side maps of \S4). Two are never measured by the paper: easier optimisation, argued from the gradient without runs against SNE, and stability between runs, stated (\S6.2) without repeated runs; our runs show stable quality but a moving layout. Our score has a limit too: it measures only whether neighbours are kept, exactly what t-SNE is built for, so it cannot show that t-SNE is better overall. Overall, the core holds, but the broad claims overreach.
 
-\paragraph{4. After the paper: what was fixed?}
+\subsection{After the paper: what was fixed?}\label{sec:after}
 The practical limits were largely fixed, and t-SNE became a standard tool~\cite{sklearn}. Two are solved by default today: Barnes--Hut, which treats far-away groups of points as one, fixes L3~\cite{vdm14}, and starting the map from a PCA layout instead of at random fixes L2~\cite{kl21}. Three more have fixes that are not standard: parametric t-SNE, a neural network that places new points and learns the tail's weight for more dimensions (L4, L5~\cite{vdm09}), and density-preserving t-SNE, which adds a cost term that keeps group sizes (L1~\cite{nbc21}). One assumption can be avoided: combining several neighbourhood sizes removes the need for one perplexity (A2~\cite{lee15}). Still open are judging maps by eye rather than by a score (L6), the untested A1 and A3, and the lack of a theory of when t-SNE works (L7), since proofs cover only well-separated clusters~\cite{ahk18,ls19}. Overall, t-SNE is partly fixed, and widely used: what limits running it is solved, but what limits reading its maps is not.
 
-\paragraph{5. Verdict.}
+\subsection{Verdict.}
 The argument is sound and the method strong: keeping neighbours rather than distances fixes crowding and keeps true neighbours together. That same choice brings the one caution, that the maps cannot show how large groups are or how far apart they lie. The core claims hold, but the broader ones rest only on pictures, and the practical limits have since been largely fixed. Therefore, taking the four parts together, this is a good, lasting paper, with one caution: a t-SNE map should be read for which groups exist, not for their sizes or the distances between them~\cite{wat16}.
 
-\paragraph{6. Extensions.}
+\subsection{Extensions.}
 Each extension addresses a gap that is still open. \textbf{(1) Score the comparison (L6).} The paper judges its rivals by eye, so we would tune every rival, repeat over seeds, and score how well each map keeps both neighbours and group sizes; this would test ``better than every rival'', which we expect t-SNE to win on neighbours only. \textbf{(2) Test the assumptions (A1--A3).} On Olivetti our map makes more errors than the raw images (25 against 20 in 400), perhaps because an assumption fails. We would rerun it three times, changing one thing each time: no PCA step (A3), neural-network features instead of raw pixels (A1, as \S6.2 suggests), and a different perplexity per group (A2~\cite{lee15}); the change that closes the gap shows which assumption failed, if any. \textbf{(3) Show the sizes the map drops (L1).} In step~1, t-SNE computes a width $\sigma_i$ for every point, larger where its group is more spread out, and then discards it, yet on our clusters these widths keep most of the true size ratio (4.1 and 5.0 against 5.1; Figure~\ref{fig:sizes}). Colouring each point by its $\sigma_i$ would let a reader judge which groups are truly spread out or tight, even where the map draws them the same size, helping to correct the main misreading of t-SNE maps without changing the method.
 
 \section{Reproduction}
+\label{sec:reproduction}
 \label{sec:repro}
-% Owner: B3, Alex. Target: 0.8 page.
-% Scope, implementation, comparison with the paper, discrepancies and challenges.
+% Owner: B3, Alex. Target: 0.55 page (about 250 words and one table).
+% Brief: concise description of the implementation or setup, comparison with the paper's results,
+% challenges encountered, and the repository link in the text.
 % Code (the link must appear in the text): \url{https://github.com/LizaaV/tsne-from-scratch}
-% Label our results clearly as ours, and figures taken from the paper as the paper's.
-% Our numbers: submission/outputs/compare3/REPORT.md.
+% Label our results clearly as ours. Our numbers: submission/outputs/compare3/REPORT.md.
+
+\subsection{What we built.}
+We wrote t-SNE and Sammon mapping from scratch in NumPy, following the paper's equations and settings, and used scikit-learn \cite{sklearn} only for Isomap, LLE and scoring. The code is at: \href{https://github.com/LizaaV/tsne-from-scratch}{\nolinkurl{github.com/LizaaV/tsne-from-scratch}}.
+
+\subsection{Results against the paper.}
+We reran the paper's comparison of four methods on its three data sets and scored each map with the paper's own measure, the 1-NN error under 10-fold cross-validation (Lecture~2). Table~\ref{tab:ours} gives the results.
+
+\begin{table}[H]
+  \caption{1-NN error on the 2-D map (lower is better). All rows are ours except the last two.}
+  \label{tab:ours}
+  \centering
+  \small
+  \begin{tabular}{lccc}
+    \toprule
+    Method & MNIST & Olivetti & COIL-20 \\
+    \midrule
+    t-SNE (ours)            & 5.9\%  & 6.3\%  & 3.6\% \\
+    Sammon mapping (ours)   & 58.0\% & 64.0\% & 30.4\% \\
+    Isomap                  & 53.8\% & 64.3\% & 20.9\%\footnotemark \\
+    LLE                     & 61.7\% & 60.8\% & 18.8\%\footnotemark[\value{footnote}] \\
+    Raw pixels, no map      & 6.0\%  & 5.0\%  & 4.8\% \\
+    \midrule
+    Paper \cite{vandermaaten2008}: t-SNE map  & 5.13\% & none & none \\
+    Paper \cite{vandermaaten2008}: raw pixels & 5.75\% & none & none \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+\footnotetext{Scored on 16 of the 20 objects, because Isomap and LLE map only the largest connected part of their neighbour graph.}
+
+On every data set t-SNE makes far fewer errors than the other methods and about as many as the raw pixels, which supports claim~2. On MNIST our 5.9\% is close to the paper's 5.13\%. Our maps (Appendix~\ref{app:our-maps}) show the same patterns as the paper's.
+
+\subsection{Beyond the paper.}
+Five further experiments go beyond the paper (Table~\ref{tab:experiments}), four on scikit-learn's small digits set (1,797 images of $8 \times 8$ pixels) and one on synthetic clusters. Two of them test claims from Table~\ref{tab:claims}. A Gaussian in place of the Student-t raises the error from 1.9\% to 8.2\% (claim~3), and five random starts all give about 2.1\% (claim~6).
+
+\subsection{Discrepancies and challenges.}
+\label{sec:discrepancies}
+Our 5.9\% on MNIST is higher than the paper's 5.13\%. The paper's number comes from its random-walk version, which uses all 60,000 digits to place 6,000, while ours is standard t-SNE on 6,000 digits. Our data also differ slightly, in the MNIST sample, the Olivetti resolution ($64 \times 64$ against $92 \times 112$) and the COIL-20 resizing. We did not implement the random-walk version, or run the supplement's four other methods and two other data sets.
+
+The paper prints its update rule (its Algorithm~1) with a plus sign in front of the gradient. Taken as printed that is gradient ascent, so we used a minus sign (Algorithm~\ref{alg:tsne}). On COIL-20, Isomap and LLE could map only 16 of the 20 objects, because their neighbour graph falls into separate parts, so their scores cover those 16.
 
 \section{Conclusion}
-% Joint. Target: 0.2 page. Verdict on the paper, and what we learned.
+\label{sec:conclusion}
+% Adel, from her Google Doc ``Adel Part Report'' (version of 27 Nov), wording unchanged.
+Reproducing t-SNE taught us three things. A map shows which groups exist, not their sizes or distances: a cluster 5 times wider looked only 1.4 times wider. Squashing hundreds of dimensions into two loses less than expected: the map classifies about as well as the raw images (5.9\% against 6.0\% 1-NN error on MNIST). Finally, a model keeps only what its cost rewards; t-SNE keeps neighbours and nothing else.
 
 % TODO: add the other sources we cite (SNE, Sammon, Isomap, LLE, and the later t-SNE work).
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
 \bibitem{vandermaaten2008}
 L.~van der Maaten and G.~Hinton.
 \newblock Visualizing data using t-{SNE}.
 \newblock \emph{Journal of Machine Learning Research}, 9(86):2579--2605, 2008.
+
+\bibitem{sammon1969}
+J.~W. Sammon.
+\newblock A nonlinear mapping for data structure analysis.
+\newblock \emph{IEEE Transactions on Computers}, C-18(5):401--409, 1969.
+
+\bibitem{tenenbaum2000}
+J.~B. Tenenbaum, V.~de Silva, and J.~C. Langford.
+\newblock A global geometric framework for nonlinear dimensionality reduction.
+\newblock \emph{Science}, 290(5500):2319--2323, 2000.
+
+\bibitem{roweis2000}
+S.~T. Roweis and L.~K. Saul.
+\newblock Nonlinear dimensionality reduction by locally linear embedding.
+\newblock \emph{Science}, 290(5500):2323--2326, 2000.
+
+\bibitem{hinton2002}
+G.~E. Hinton and S.~T. Roweis.
+\newblock Stochastic neighbor embedding.
+\newblock In \emph{Advances in Neural Information Processing Systems}, volume~15, pages 833--840. MIT Press, 2002.
+
+\bibitem{lecun1998}
+Y.~LeCun, L.~Bottou, Y.~Bengio, and P.~Haffner.
+\newblock Gradient-based learning applied to document recognition.
+\newblock \emph{Proceedings of the IEEE}, 86(11):2278--2324, 1998.
+
+\bibitem{samaria1994}
+F.~S. Samaria and A.~C. Harter.
+\newblock Parameterisation of a stochastic model for human face identification.
+\newblock In \emph{Proceedings of the 2nd IEEE Workshop on Applications of Computer Vision}, pages 138--142, 1994.
+
+\bibitem{nene1996}
+S.~A. Nene, S.~K. Nayar, and H.~Murase.
+\newblock Columbia Object Image Library ({COIL}-20).
+\newblock Technical Report CUCS-005-96, Columbia University, 1996.
 
 % Later work cited in Section 4 (B4).
 \bibitem{vdm14} L.~van der Maaten. Accelerating t-SNE using tree-based algorithms. \emph{JMLR}, 15(93):3221--3245, 2014.
@@ -138,11 +337,13 @@ L.~van der Maaten and G.~Hinton.
 \bibitem{sklearn} F.~Pedregosa et al. Scikit-learn: machine learning in Python. \emph{JMLR}, 12(85):2825--2830, 2011.
 \end{thebibliography}
 
-% Appendices (excluded from the 4-page limit). A and B belong to Section 4.
+\clearpage
 \appendix
+% Appendices A and B belong to Section 4 (Liza). C to E belong to Sections 3 and 5 (Alex).
 
 \section{Method map of our critical analysis}
 \label{app:map}
+\appendixnumbering{A}
 
 Figure~\ref{fig:map} is the map for Section~\ref{sec:critical}. The boxes are the steps of t-SNE (our Section~\ref{sec:method}); each label below a box is a strength, assumption or limitation that comes from that step, and the dashed strip holds those about the paper as a whole.
 
@@ -155,8 +356,9 @@ Figure~\ref{fig:map} is the map for Section~\ref{sec:critical}. The boxes are th
 
 \section{The paper's claims, and the synthetic-cluster test}
 \label{app:claims}
+\appendixnumbering{B}
 
-\subsection{The seven claims}
+\subsection{The seven claims.}
 \label{app:claims-table}
 
 Table~\ref{tab:claims} supports the count in Section~\ref{sec:critical}. Verdicts use the paper, our experiments (Sections~\ref{sec:critical} and~\ref{sec:repro}) and later work.
@@ -169,18 +371,18 @@ Table~\ref{tab:claims} supports the count in Section~\ref{sec:critical}. Verdict
 \toprule
 Claim (where) & Paper's evidence & What we add & Verdict \\
 \midrule
-Less crowding (abstract, \S3) & cause explained; maps judged by eye & Gaussian map kernel: 1-NN error 1.9\% $\to$ 8.2\% & holds \\
-Captures local structure (\S1) & 1-NN error 5.13\% on the map, 5.75\% on pixels (\S5) & 5.9\% against 6.0\% on MNIST; Olivetti slightly worse than raw & holds, if A1 holds \\
-Many scales in one map (abstract) & pictures (Fig.~7) & sizes and gaps distorted (Figure~\ref{fig:sizes}) & by eye \\
-Very large data sets (abstract, \S5) & 6{,}000 of 60{,}000 digits drawn (Fig.~7) & not reproduced & by eye \\
-Better than other techniques (abstract, \S7) & 40 maps, one setting per rival (Table~1 of the paper) & better at neighbours than three rivals; PCA better at sizes & by eye \\
-Easier to optimise than SNE (abstract, \S3.3) & argued from the gradient & not tested: we did not run SNE & not tested \\
-Quality stable between runs (\S6.2) & stated, no runs shown & five seeds on digits: $2.1\pm0.1\%$, layout moves & not tested by the paper \\
+1. Better than other techniques (abstract, \S7) & 40 maps, one setting per rival (Table~1 of the paper) & better at neighbours than three rivals; PCA better at sizes & by eye \\
+2. Captures local structure (\S1) & 1-NN error 5.13\% on the map, 5.75\% on pixels (\S5) & 5.9\% against 6.0\% on MNIST; Olivetti slightly worse than raw & holds, if A1 holds \\
+3. Less crowding (abstract, \S3) & cause explained; maps judged by eye & Gaussian map kernel: 1-NN error 1.9\% $\to$ 8.2\% & holds \\
+4. Many scales in one map (abstract) & pictures (Fig.~7) & sizes and gaps distorted (Figure~\ref{fig:sizes}) & by eye \\
+5. Easier to optimise than SNE (abstract, \S3.3) & argued from the gradient & not tested: we did not run SNE & not tested \\
+6. Quality stable between runs (\S6.2) & stated, no runs shown & five seeds on digits: $2.1\pm0.1\%$, layout moves & not tested by the paper \\
+7. Very large data sets (abstract, \S5) & 6{,}000 of 60{,}000 digits drawn (Fig.~7) & not reproduced & by eye \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{The synthetic-cluster test}
+\subsection{The synthetic-cluster test.}
 \label{app:sizes}
 
 Figure~\ref{fig:sizes} backs limitation L1 and Extension~(3) in Section~\ref{sec:critical}: on clusters whose sizes and gaps are known, it compares what PCA and t-SNE draw.
@@ -208,5 +410,195 @@ Figure~\ref{fig:sizes} backs limitation L1 and Extension~(3) in Section~\ref{sec
 \end{figure}
 
 \paragraph{How it was made.} Three Gaussian clusters of 200 points in 10-D: A has standard deviation 1, B and C have 5, and the centres lie at distances 10 (A to B) and 50 (B to C). t-SNE uses our implementation, perplexity 30, no PCA, seed 0. Width is the mean distance of a cluster's points to their centre; gap is the distance between centres; the $\sigma_i$ column is the ratio of the clusters' median $\sigma_i$. Pairs that join B and C hold less than $10^{-6}$ of the total mass of $P$. The $\sigma_i$ ratio for B/A (4.1) is below the true 5.1 because B overlaps A, so some neighbours of B's points lie in the tight cluster.
+
+\clearpage
+\section{The paper's other maps}
+\label{app:paper-maps}
+\appendixnumbering{C}
+% Not counted in the 4-page limit. Figures taken from the paper; our own maps can be added next to them later.
+
+\begin{figure}[!ht]
+  \centering
+  \begin{minipage}[t]{0.40\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig3a_mnist_isomap.png}\\[-2pt]
+    {\footnotesize (a) Isomap}
+  \end{minipage}\hspace{0.05\linewidth}%
+  \begin{minipage}[t]{0.40\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig3b_mnist_lle.png}\\[-2pt]
+    {\footnotesize (b) LLE}
+  \end{minipage}
+  \caption{The paper's maps of MNIST (6,000 digits) for Isomap and LLE. Reproduced from van der Maaten and Hinton \cite{vandermaaten2008}, Figure~3.}
+  \label{fig:paper-mnist-cd}
+\end{figure}
+
+\begin{figure}[!ht]
+  \centering
+  \begin{minipage}[t]{0.31\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig4a_olivetti_tsne.png}\\[-2pt]
+    {\footnotesize (a) t-SNE}
+  \end{minipage}\hspace{0.05\linewidth}%
+  \begin{minipage}[t]{0.31\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig4b_olivetti_sammon.png}\\[-2pt]
+    {\footnotesize (b) Sammon mapping}
+  \end{minipage}\\[6pt]
+  \begin{minipage}[t]{0.31\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig4c_olivetti_isomap.png}\\[-2pt]
+    {\footnotesize (c) Isomap}
+  \end{minipage}\hspace{0.05\linewidth}%
+  \begin{minipage}[t]{0.31\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig4d_olivetti_lle.png}\\[-2pt]
+    {\footnotesize (d) LLE}
+  \end{minipage}
+  \caption{The paper's maps of the Olivetti faces (400 photos, 40 people). Reproduced from van der Maaten and Hinton \cite{vandermaaten2008}, Figure~4.}
+  \label{fig:paper-olivetti}
+\end{figure}
+
+\begin{figure}[!ht]
+  \centering
+  \begin{minipage}[t]{0.31\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig5a_coil20_tsne.png}\\[-2pt]
+    {\footnotesize (a) t-SNE: closed loops.}
+  \end{minipage}\hspace{0.05\linewidth}%
+  \begin{minipage}[t]{0.31\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig5b_coil20_sammon.png}\\[-2pt]
+    {\footnotesize (b) Sammon mapping}
+  \end{minipage}\\[6pt]
+  \begin{minipage}[t]{0.31\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig5c_coil20_isomap.png}\\[-2pt]
+    {\footnotesize (c) Isomap: few objects shown.}
+  \end{minipage}\hspace{0.05\linewidth}%
+  \begin{minipage}[t]{0.31\linewidth}\centering
+    \includegraphics[width=\linewidth]{paper_fig5d_coil20_lle.png}\\[-2pt]
+    {\footnotesize (d) LLE: few objects shown.}
+  \end{minipage}
+  \caption{The paper's maps of COIL-20 (1,440 images, 20 objects). Reproduced from van der Maaten and Hinton \cite{vandermaaten2008}, Figure~5. The notes under the maps are ours.}
+  \label{fig:paper-coil20}
+\end{figure}
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=0.62\linewidth]{paper_fig7_mnist_randomwalk.jpg}
+  \caption{The paper's map of 6,000 MNIST digits from random-walk t-SNE, which uses all 60,000 digits to compute the similarities. The paper's 1-nearest-neighbour errors (5.13\% on this map, 5.75\% on the original images) refer to this experiment. Reproduced from van der Maaten and Hinton \cite{vandermaaten2008}, Figure~7.}
+  \label{fig:paper-randomwalk}
+\end{figure}
+
+\clearpage
+\section{Our maps}
+\label{app:our-maps}
+\appendixnumbering{D}
+
+\begin{figure}[!ht]
+  \centering
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{tsne_mnist.png}\\[-2pt]
+    {\footnotesize (a) t-SNE, 5.9\%}
+  \end{minipage}\hspace{0.05\linewidth}%
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{sammon_mnist.png}\\[-2pt]
+    {\footnotesize (b) Sammon mapping, 58.0\%}
+  \end{minipage}\\[6pt]
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{isomap_mnist.png}\\[-2pt]
+    {\footnotesize (c) Isomap, 53.8\%}
+  \end{minipage}\hspace{0.05\linewidth}%
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{lle_mnist.png}\\[-2pt]
+    {\footnotesize (d) LLE, 61.7\%}
+  \end{minipage}
+  \caption{Our own maps of MNIST (6,000 digits), with the 1-NN error of each. The paper's maps are in Figures~\ref{fig:paper-mnist-ab} and~\ref{fig:paper-mnist-cd}.}
+  \label{fig:ours-mnist}
+\end{figure}
+
+\begin{figure}[!ht]
+  \centering
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{tsne_olivetti.png}\\[-2pt]
+    {\footnotesize (a) t-SNE, 6.3\%}
+  \end{minipage}\hspace{0.05\linewidth}%
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{sammon_olivetti.png}\\[-2pt]
+    {\footnotesize (b) Sammon mapping, 64.0\%}
+  \end{minipage}\\[6pt]
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{isomap_olivetti.png}\\[-2pt]
+    {\footnotesize (c) Isomap, 64.3\%}
+  \end{minipage}\hspace{0.05\linewidth}%
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{lle_olivetti.png}\\[-2pt]
+    {\footnotesize (d) LLE, 60.8\%}
+  \end{minipage}
+  \caption{Our own maps of the Olivetti faces, with the 1-NN error of each. The paper's maps are in Figure~\ref{fig:paper-olivetti}.}
+  \label{fig:ours-olivetti}
+\end{figure}
+
+\begin{figure}[!ht]
+  \centering
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{tsne_coil20.png}\\[-2pt]
+    {\footnotesize (a) t-SNE, 3.6\%}
+  \end{minipage}\hspace{0.05\linewidth}%
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{sammon_coil20.png}\\[-2pt]
+    {\footnotesize (b) Sammon mapping, 30.4\%}
+  \end{minipage}\\[6pt]
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{isomap_coil20.png}\\[-2pt]
+    {\footnotesize (c) Isomap, 20.9\%$^\dagger$}
+  \end{minipage}\hspace{0.05\linewidth}%
+  \begin{minipage}[t]{0.29\linewidth}\centering
+    \includegraphics[width=\linewidth]{lle_coil20.png}\\[-2pt]
+    {\footnotesize (d) LLE, 18.8\%$^\dagger$}
+  \end{minipage}
+  \caption{Our own maps of COIL-20, with the 1-NN error of each. $\dagger$ Isomap and LLE map only 16 of the 20 objects. The paper's maps are in Figure~\ref{fig:paper-coil20}.}
+  \label{fig:ours-coil20}
+\end{figure}
+
+\clearpage
+\section{Experiments beyond the paper}
+\label{app:beyond}
+\appendixnumbering{E}
+
+\begin{table}[!ht]
+  \caption{Our five experiments beyond the paper. Percentages are 1-NN errors on the small digits set.}
+  \label{tab:experiments}
+  \centering
+  \small
+  \begin{tabular}{ll}
+    \toprule
+    Experiment & Our result \\
+    \midrule
+    Gaussian in place of Student-t & 8.2\% against 1.9\% \\
+    Perplexity 5, 15, 40, 100 & 2.3\%, 2.2\%, 1.9\%, 2.2\% \\
+    Early exaggeration on and off & final cost 0.638 and 0.663 \\
+    Five random starts & $2.1 \pm 0.1\%$ \\
+    Cluster sizes (synthetic clusters) & a ratio of 5.1 becomes 1.4 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{The t-SNE algorithm}
+\label{app:algorithm}
+\appendixnumbering{F}
+\setcounter{algorithm}{0}
+\renewcommand{\thealgorithm}{F\arabic{algorithm}}
+\makeatletter\renewcommand{\theHalgorithm}{F\arabic{algorithm}}\makeatother
+
+Algorithm~\ref{alg:tsne} puts the method of Section~\ref{sec:method} together. It follows Algorithm~1 of the paper \cite{vandermaaten2008}, except for the sign in line~5 (Section~\ref{sec:discrepancies}). The equation numbers refer to Section~\ref{sec:method}.
+
+\begin{algorithm}[H]
+  \caption{t-SNE, adapted from Algorithm~1 of the paper \cite{vandermaaten2008}.}
+  \label{alg:tsne}
+  {\hypersetup{pdfborder={0 0 0}}%
+  \begin{algorithmic}[1]
+    \Require data $x_1, \dots, x_n$; perplexity; iterations $T$; learning rate $\eta$; momentum $\alpha(t)$
+    \Ensure map points $y_1, \dots, y_n$
+    \State compute $p_{j|i}$ at the given perplexity, then $p_{ij}$ \Comment{Equations \eqref{eq:p-cond}, \eqref{eq:joint}}
+    \State sample the starting map $Y^{(0)}$ from $\mathcal{N}(0, 10^{-4} I)$
+    \For{$t = 1$ to $T$}
+      \State compute $q_{ij}$ and the gradient $\partial C / \partial Y$ \Comment{Equations \eqref{eq:q-t}, \eqref{eq:grad-t}}
+      \State $Y^{(t)} = Y^{(t-1)} - \eta \, \partial C / \partial Y + \alpha(t) \, (Y^{(t-1)} - Y^{(t-2)})$ \Comment{minus, not plus}
+    \EndFor
+  \end{algorithmic}}
+\end{algorithm}
 
 \end{document}
