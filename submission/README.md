@@ -42,7 +42,7 @@ The report reads its figures from `report/figures/` and our maps from `outputs/c
 
 ## Hand-in checklist
 
-- [ ] Main text is 4 pages or fewer (references and appendix excluded)
+- [x] Main text is 4 pages or fewer (references and appendix excluded)
 - [x] All four names and affiliations are on the first page
 - [x] The repository link is in the report
 - [x] Every figure and number is labelled as the paper's or ours
