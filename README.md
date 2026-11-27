@@ -28,17 +28,19 @@ Repository: https://github.com/LizaaV/tsne-from-scratch
 | `submission/code/compare3.py` | the paper's Section 4 comparison (Figures 2–5) on MNIST, Olivetti and COIL-20, with numbers added | ours; uses scikit-learn for Isomap, LLE, trustworthiness and the data loaders |
 | `resources/figures/`, `resources/results/` | outputs of `resources/experiments.py` (E1–E7) | generated |
 | `submission/outputs/` | outputs of E8 and of `compare3.py` | generated |
-| `submission/report/figures/` | the two figures of the critical analysis (method map; sizes and gaps from E7 and E10), drawn in TikZ; sources in `figures/source/` | ours |
+| `submission/report/figures/B4_*.pdf`, `ours_*.pdf` | the report's own figures: the method loop, the method map, and sizes and gaps from E7 and E10 (drawn in TikZ, sources in `figures/source/`), and the Gaussian vs Student-t kernels | ours |
+| `submission/report/figures/paper_fig*` | the paper's Figures 2–5 and 7, shown in the report's appendix next to our maps | **reused**: reproduced from van der Maaten and Hinton (2008), credited in each caption |
 
 ## Ours and reused
 
-- **Ours:** every file in the table above. No code was copied from the authors' Matlab implementation or from scikit-learn's t-SNE.
+- **Ours:** every file in the table above except the paper's figures (`paper_fig*`). No code was copied from the authors' Matlab implementation or from scikit-learn's t-SNE.
 - **Reused libraries:** NumPy, SciPy, matplotlib, Pillow, and scikit-learn (Isomap, LLE, the 1-NN classifier, trustworthiness, the data loaders, and its own t-SNE as a cross-check only).
 - **Data:**
   - digits: bundled with scikit-learn (UCI Optical Recognition of Handwritten Digits).
   - MNIST: LeCun, Cortes and Burges, downloaded from OpenML (`mnist_784`).
   - Olivetti faces: AT&T Laboratories Cambridge, downloaded through scikit-learn.
   - COIL-20: Nene, Nayar and Murase (1996), Columbia University CAVE, [coil-20-proc.zip](https://www.cs.columbia.edu/CAVE/databases/SLAM_coil-20_coil-100/coil-20/coil-20-proc.zip).
+- **The paper's figures:** Figures 2–5 and 7 of van der Maaten and Hinton (2008), in `submission/report/figures/paper_fig*`, used only for side-by-side comparison in the report.
 - **Report template:** the official NeurIPS 2026 style file, `submission/report/extra/neurips_2026.sty`.
 
 ## Setup and running
