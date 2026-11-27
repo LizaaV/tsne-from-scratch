@@ -185,7 +185,7 @@ The evidence is strong visually but thin as numerical proof. Of the paper's seve
 % Conventions: \S = a section of the paper; "our Section" = this report; "step" = Figure B1.
 
 
-We judge the paper in its own order, from the argument to what came after. From the method on, we name its strengths (S), the assumptions it never checks (A) and its limitations (L), each backed by the paper, our experiments or later work. Figure~\ref{fig:loop} gives the steps (``step~1'' to ``step~4'') and Figure~\ref{fig:map} places each label under its step; both are best read alongside this section. \S\ refers to the paper.
+We judge the paper in its own order, from the argument to what came after. From the method on, we name its strengths (S), assumptions (A) and limitations (L), each backed by the paper, our experiments or later work. We refer to the four steps of Figure~\ref{fig:loop}: the data similarities $P$ (step~1), the map similarities $Q$ (step~2), the KL cost (step~3) and the gradient update (step~4). Figure~\ref{fig:map} places each label under its step; both are best read alongside this section. \S\ refers to the paper.
 
 \subsection{The argument: is it sound?}
 The main problem is crowding (our Section~\ref{sec:method}). The authors show its cause, too little room in a 2-D map (\S3.2), and fix that cause with a heavy-tailed curve on the map (\S3.3), whereas the earlier fix they discuss, UNI-SNE, only eased the symptom. Our test supports the fix: with a Gaussian curve instead, the 1-NN error on digits rises from 1.9\% to 8.2\% (our Section~\ref{sec:repro}). Each link follows from the last, so the argument is sound.
