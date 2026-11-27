@@ -109,15 +109,14 @@ p_{j|i}=\frac{\exp\!\left(-\|x_i-x_j\|^2/2\sigma_i^2\right)}
 \label{eq:p-cond}
 \end{equation}
 SNE converts high dimensional data points $x$ into pairwise similarities represented as the conditional probability that $x_i$ would pick $x_j$ as its neighbour.
-$p_{j|i}$ is proportional to a Gaussian distribution centred at $x_i$, where SNE performs binary search to find $\sigma_i$ so every point has the same perplexity, $\mathrm{Perp}(P_i)=2^{H(P_i)}$, where $H(P_i)=-\sum_j p_{j|i}\log_2 p_{j|i}$. This allows a narrow width for dense regions and wide for sparse regions. The perplexity is chosen; in this paper, perplexity $= 40$~\cite{vandermaaten2008}. $P$ acts as a soft kNN graph, where the perplexity is the effective number of neighbours $k$ \course{kNN, L01; Gaussian (RBF) kernel, L02}.
+$p_{j|i}$ is proportional to a Gaussian distribution centred at $x_i$, where SNE performs binary search to find a density-adapted $\sigma_i$ so every point has the same perplexity, $\mathrm{Perp}(P_i)=2^{H(P_i)}$, where $H(P_i)=-\sum_j p_{j|i}\log_2 p_{j|i}$. The perplexity is chosen; in this paper, perplexity $= 40$~\cite{vandermaaten2008}. $P$ acts as a soft kNN graph, where the perplexity is the effective number of neighbours $k$ \course{kNN, L01; Gaussian (RBF) kernel, L02}.
 The map points $y$ are also converted into similarities, $q_{j|i}$. They too are proportional to a Gaussian distribution, with the same form as (\ref{eq:p-cond}) applied to $y$, but the width $\sigma$ is fixed and the same for every point.
-\begin{align}
-C&=\sum_i \mathrm{KL}(P_i\,\|\,Q_i)=\sum_i\sum_j p_{j|i}\log\frac{p_{j|i}}{q_{j|i}}
-\label{eq:cost-sne}\\
-\frac{\partial C}{\partial y_i}&=2\sum_j\left(p_{j|i}-q_{j|i}+p_{i|j}-q_{i|j}\right)(y_i-y_j)
-\label{eq:grad-sne}
-\end{align}
-The cost function is a KL divergence and measures how well $q_{j|i}$ models $p_{j|i}$. $P$ is fixed so the KL is the cross-entropy plus constant, therefore the same family as logistic regression's negative log-likelihood cost. The cost is minimised using the gradient descent method \course{gradient descent, L07; logistic regression's negative log-likelihood, L07}.
+\begin{equation}
+C=\sum_i \mathrm{KL}(P_i\,\|\,Q_i)=\sum_{i,j} p_{j|i}\log\frac{p_{j|i}}{q_{j|i}},\quad
+\frac{\partial C}{\partial y_i}=2\sum_j\left(p_{j|i}-q_{j|i}+p_{i|j}-q_{i|j}\right)(y_i-y_j)
+\label{eq:cost-sne}
+\end{equation}
+The cost function is a KL divergence and measures how well $q_{j|i}$ models $p_{j|i}$. $P$ is fixed so the KL is the cross-entropy plus constant, therefore the same family as logistic regression's negative log-likelihood cost. It is minimised by gradient descent \course{gradient descent, L07; logistic regression's negative log-likelihood, L07}.
 
 There are three problems with SNE. Firstly, the cost is asymmetric: large $p$/ small $q$ is costly, small $p$/ large $q$ is cheap, hence the cost focuses on the local structure over the global structure of the map. Secondly, the cost function is difficult to optimise with many local minima, a four-term gradient, and it needs simulated annealing and careful tuning to reach a good map. Thirdly, due to the curse of dimensionality there is $\times$1000 more room in a 10-D data space than a 2-D map for moderately distanced data points, hence these points are crushed together in the centre of the map~\cite{vandermaaten2008} \course{curse of dimensionality, L01}.
 
