@@ -185,7 +185,7 @@ The evidence is strong visually but thin as numerical proof. Of the paper's seve
 % Conventions: \S = a section of the paper; "our Section" = this report; "step" = Figure B1.
 
 
-We judge the paper in its own order, from the argument to what came after. From the method on, we name its strengths (S), the assumptions it never checks (A) and its limitations (L), each backed by the paper, our experiments or later work. The steps (``step~1'' to ``step~4'') are those of Figure~\ref{fig:loop} (Appendix~\ref{app:algorithm}), and Figure~\ref{fig:map} (Appendix~\ref{app:map}) places each label under its step; both are best read alongside this section; \S\ refers to the paper.
+We judge the paper in its own order, from the argument to what came after. From the method on, we name its strengths (S), the assumptions it never checks (A) and its limitations (L), each backed by the paper, our experiments or later work. Figure~\ref{fig:loop} gives the steps (``step~1'' to ``step~4'') and Figure~\ref{fig:map} places each label under its step; both are best read alongside this section. \S\ refers to the paper.
 
 \subsection{The argument: is it sound?}
 The main problem is crowding (our Section~\ref{sec:method}). The authors show its cause, too little room in a 2-D map (\S3.2), and fix that cause with a heavy-tailed curve on the map (\S3.3), whereas the earlier fix they discuss, UNI-SNE, only eased the symptom. Our test supports the fix: with a Gaussian curve instead, the 1-NN error on digits rises from 1.9\% to 8.2\% (our Section~\ref{sec:repro}). Each link follows from the last, so the argument is sound.
@@ -195,27 +195,21 @@ The main problem is crowding (our Section~\ref{sec:method}). The authors show it
 
 \textbf{Assumptions.} The map is only as good as the neighbours step~1 finds, and step~1 rests on three choices the paper never tests. Cutting the data to 30 dimensions with PCA \textit{(L03)} assumes nothing important is lost (A3, \S4.2), yet PCA is linear and can blur curved structure that separates neighbours. Choosing neighbours by straight-line distance assumes that close means similar (A1), yet pixel distance can reflect lighting more than identity, as the authors suspect for faces (\S6.2). Using one perplexity for every point assumes that one neighbour count fits all groups (A2), yet small groups may need fewer neighbours. Each could fail, so each should be tested (Extension~2).
 
-\textbf{Other strengths and limitations.} t-SNE is also easier to run than SNE (S3), because its gradient is simpler and it needs no simulated annealing (\S3.1, \S3.3). Its other limitations are practical, and the authors admit each one. Because each run starts at random and depends on settings such as the perplexity, the layout changes between runs, though the quality stays the same (L2, our Section~\ref{sec:repro}). Because every pair is used at every step, it is slow on big data (L3, $O(n^2)$); it learns no mapping, so it cannot add new points (L4); and its tail's weight is set by hand, so it is only shown for 2-D and 3-D maps (L5, \S6.2).
-
-Overall, the method is strong, with one built-in trade-off: keeping neighbours gives S1 and S2 and causes L1, the maps are only as good as A1--A3 allow, and the other limits concern running it; most were fixed later (Section~\ref{sec:after}), so they weigh little against the method.
+\textbf{Other strengths and limitations.} t-SNE is also easier to run than SNE (S3), because its gradient is simpler and it needs no simulated annealing (\S3.1, \S3.3). Its other limitations are practical, and the authors admit each one. Because each run starts at random and depends on settings such as the perplexity, the layout changes between runs, though the quality stays the same (L2, our Section~\ref{sec:repro}). Because every pair is used at every step, it is slow on big data (L3, $O(n^2)$); it learns no mapping, so it cannot add new points (L4); and its tail's weight is set by hand, so it is only shown for 2-D and 3-D maps (L5, \S6.2). Overall, the method is strong, with one built-in trade-off: keeping neighbours gives S1 and S2 and causes L1, and the other limits concern running it; most were fixed later (Section~\ref{sec:after}), so they weigh little against the method.
 
 \subsection{The experiments and claims: do they hold?}
 \textbf{The experiments.} The experiments are wide and honest (S4): seven rival methods on five data sets, with the weaknesses stated (\S6.2). But apart from one experiment (\S5), they are judged by eye, with no score (L6) and one setting per rival. We scored them with that experiment's 1-NN error, and t-SNE clearly beats its rivals (Table~\ref{tab:ours}): the pictures were right, but the paper never measured it.
 
-\textbf{The claims.} Our Section~\ref{sec:evidence} rates the paper's evidence for its seven claims (Table~\ref{tab:claims}): only claim~2, that true neighbours are kept, is measured; claims~1, 3, 4 and~7 rest on maps with no score, and claims~5 and~6 have no experiment. Adding our own tests gives the split from our talk. Two claims hold: claim~2 (as long as A1 holds) and claim~3, less crowding, which our Gaussian test backs. Three rest on pictures: claims~1, 4 and~7; for claim~1, our score shows only that t-SNE keeps neighbours better, exactly what it is built for, not that it is better overall. Two were never tested by the paper: claims~5 and~6, although our runs show that stability holds for quality but not for layout.
-
-Overall, the core holds, but the broad claims overreach.
+\textbf{The claims.} Our Section~\ref{sec:evidence} rates the paper's evidence for its seven claims (Table~\ref{tab:claims}): only claim~2, that true neighbours are kept, is measured; claims~1, 3, 4 and~7 rest on maps with no score, and claims~5 and~6 have no experiment. Adding our own tests gives the split from our talk. Two claims hold: claim~2 (as long as A1 holds) and claim~3, less crowding, which our Gaussian test backs. Three rest on pictures: claims~1, 4 and~7; for claim~1, our score shows only that t-SNE keeps neighbours better, exactly what it is built for, not that it is better overall. Two were never tested by the paper: claims~5 and~6, although our runs show that stability holds for quality but not for layout. Overall, the core holds, but the broad claims overreach.
 
 \subsection{After the paper: what was fixed?}\label{sec:after}
-The practical limits were largely fixed, and t-SNE became a standard tool~\cite{sklearn}. What limits reading its maps is not: fixes for distorted sizes (L1) and a way around one perplexity (A2) exist but are rarely used, while judging by eye (L6), the missing theory (L7) and the untested A1 and A3 have no fix yet. We evaluated what later work did about each limitation; for lack of space, the detail (every fix, its source and its status) is in Table~\ref{tab:after}, Appendix~\ref{app:after}.
-
-Overall, t-SNE is partly fixed, and widely used: what limits running it is solved, but what limits reading its maps is not.
+t-SNE became a standard tool~\cite{sklearn}, and its practical limits were largely fixed. Fixes for distorted sizes (L1) and one perplexity (A2) exist but are rarely used, while judging by eye (L6), the missing theory (L7) and the untested A1 and A3 have no fix yet. For lack of space, every fix, its source and its status are in Table~\ref{tab:after}. Overall, t-SNE is partly fixed, and widely used: what limits running it is solved, but what limits reading its maps is not.
 
 \subsection{Verdict.}
-The argument is sound and the method strong, but keeping neighbours rather than distances brings one caution: the maps cannot show how large groups are or how far apart they lie. The core claims hold, the broader ones rest on pictures alone, and the practical limits are largely fixed. Therefore, taking the four parts together, this is a good, lasting paper, with one caution: read a t-SNE map for which groups exist, not for their sizes or the distances between them~\cite{wat16}.
+The argument is sound and the method strong, but keeping neighbours rather than distances brings one caution. The core claims hold, the broader ones rest on pictures alone, and the practical limits are largely fixed. Therefore, taking the four parts together, this is a good, lasting paper, with one caution: read a t-SNE map for which groups exist, not for their sizes or the distances between them~\cite{wat16}.
 
 \subsection{Extensions.}
-Each extension addresses a gap that is still open; Appendix~\ref{app:ext} gives the detail. \textbf{(1) Score the comparison (L6):} tune and score every rival on both neighbours and group sizes, to test whether t-SNE beats every rival. \textbf{(2) Test the assumptions (A1--A3):} rerun Olivetti, where our map trails the raw images (Table~\ref{tab:ours}), changing one assumption at a time, to find which one fails. \textbf{(3) Show the sizes the map drops (L1):} colour each point by its width $\sigma_i$, which t-SNE computes and discards although it keeps most of the true size ratio (Figure~\ref{fig:sizes}), so readers can judge which groups are truly spread out.
+Three extensions address gaps that are still open (detail in Appendix~\ref{app:ext}): (1) score every rival on both neighbours and group sizes (L6); (2) rerun Olivetti, where our map trails the raw images (Table~\ref{tab:ours}), changing one assumption at a time (A1--A3); (3) colour each point by its width $\sigma_i$, which t-SNE computes and discards, to show the sizes the map drops (L1, Figure~\ref{fig:sizes}).
 
 \section{Reproduction}
 \label{sec:reproduction}
@@ -497,7 +491,7 @@ Figure~\ref{fig:sizes} backs limitation L1 and Extension~(3) in Section~\ref{sec
       \bottomrule
     \end{tabular}
   \end{minipage}
-  \caption{Our results: three synthetic 10-D clusters A, B, C with known sizes (one run). Widths and gaps are ratios between clusters; the $\sigma_i$ column is the ratio of the clusters' median bell widths from step~1. Last row: 1-NN error on the small digits set (1{,}797 images; true = raw pixels). PCA keeps sizes and gaps, t-SNE keeps neighbours.}
+  \caption{Our figure. Three synthetic 10-D clusters A, B, C with known sizes (one run). Widths and gaps are ratios between clusters; the $\sigma_i$ column is the ratio of the clusters' median bell widths from step~1. Last row: 1-NN error on the small digits set (1{,}797 images; true = raw pixels). PCA keeps sizes and gaps, t-SNE keeps neighbours.}
   \label{fig:sizes}
 \end{figure}
 
@@ -548,7 +542,7 @@ Figure~\ref{fig:map} is the map for Section~\ref{sec:critical}. The boxes are th
 \begin{figure}[!h]
   \centering
   \includegraphics[width=\linewidth]{B4_method_map.pdf}
-  \caption{Our critical analysis at a glance (our figure): the steps of t-SNE, and each strength (S), assumption (A) and limitation (L) under the step that causes it. The dot shows its state today, and $^*$ marks those the authors admit themselves.}
+  \caption{Our figure. Section~\ref{sec:critical} at a glance: the steps of t-SNE, and each strength (S), assumption (A) and limitation (L) under the step that causes it. The dot shows its state today, and $^*$ marks those the authors admit themselves.}
   \label{fig:map}
 \end{figure}
 
