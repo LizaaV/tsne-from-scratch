@@ -30,6 +30,8 @@
 \usepackage{algpseudocode} % pseudocode in Appendix F
 \algrenewcommand\algorithmicrequire{\textbf{Input:}}
 \algrenewcommand\algorithmicensure{\textbf{Output:}}
+% Course-link tag (Section 2): \course{topic, Lxx} prints (Course link: topic, Lxx)
+\newcommand{\course}[1]{\textit{(Course link: #1)}}
 
 % Read figures straight from where they are generated (do not copy or edit them there).
 %   resources/figures/            E1-E7, small digits set
@@ -96,69 +98,49 @@ The paper makes three contributions. (1) t-SNE, a variant of SNE \cite{hinton200
 
 \section{Method}
 \label{sec:method}
-% Owner: B2, Anna Claire. Text taken from her Google Doc ``B2 REPORT DRAFT: Method'' (version of 26 Nov).
-% Her bracketed notes asked for equations, a figure and pseudocode; those are added where she marked them.
+% Owner: B2, Anna Claire. Text from her report draft (version of 27 Nov), with equations and figure where she marked them.
 
 \subsection{Stochastic Neighbour Embedding.}
-t-SNE is based on Stochastic Neighbour Embedding. SNE converts high dimensional data points $x$ into pairwise similarities represented as the conditional probability that $x_i$ is neighbours with $x_j$.
+t-SNE is based on Stochastic Neighbour Embedding~\cite{hinton2002}.
 \begin{equation}
-  p_{j|i} = \frac{\exp\!\left(-\|x_i - x_j\|^2 / 2\sigma_i^2\right)}{\sum_{k \neq i} \exp\!\left(-\|x_i - x_k\|^2 / 2\sigma_i^2\right)}, \qquad p_{i|i} = 0 .
-  \label{eq:p-cond}
+p_{j|i}=\frac{\exp\!\left(-\|x_i-x_j\|^2/2\sigma_i^2\right)}
+             {\sum_{k\neq i}\exp\!\left(-\|x_i-x_k\|^2/2\sigma_i^2\right)},
+\qquad p_{i|i}=0
+\label{eq:p-cond}
 \end{equation}
-$p_{j|i}$ is proportional to a Gaussian distribution centred at $x_i$, where SNE performs binary search to find $\sigma_i$ so every point has the same perplexity.
-\begin{equation}
-  \mathrm{Perp}(P_i) = 2^{H(P_i)}, \qquad H(P_i) = -\sum_j p_{j|i} \log_2 p_{j|i} .
-  \label{eq:perp}
-\end{equation}
-This allows a narrow width for dense regions and wide for sparse regions. The perplexity is chosen; in this paper, perplexity = 40. $P$ acts as a soft kNN graph, where the perplexity is the effective number of neighbours $k$. \emph{Course link: kNN (Lecture~1); Gaussian (RBF) kernel (Lecture~2).}
-
-The map points $y$ are also converted into similarities, $q_{j|i}$. They too are proportional to Gaussian distribution but the width $\sigma_i$ is fixed and the same for every point.
-\begin{equation}
-  q_{j|i} = \frac{\exp\!\left(-\|y_i - y_j\|^2\right)}{\sum_{k \neq i} \exp\!\left(-\|y_i - y_k\|^2\right)} .
-  \label{eq:q-cond}
-\end{equation}
-The cost function is a KL divergence and measures how well $q_{j|i}$ models $p_{j|i}$. $P$ is fixed so the KL is the cross-entropy plus constant, therefore the same family as logistic regression's log likelihood cost. The cost is minimised using the gradient descent method. \emph{Course link: gradient descent; logistic regression's log-likelihood.}
+SNE converts high dimensional data points $x$ into pairwise similarities represented as the conditional probability that $x_i$ would pick $x_j$ as its neighbour.
+$p_{j|i}$ is proportional to a Gaussian distribution centred at $x_i$, where SNE performs binary search to find $\sigma_i$ so every point has the same perplexity, $\mathrm{Perp}(P_i)=2^{H(P_i)}$, where $H(P_i)=-\sum_j p_{j|i}\log_2 p_{j|i}$. This allows a narrow width for dense regions and wide for sparse regions. The perplexity is chosen; in this paper, perplexity $= 40$~\cite{vandermaaten2008}. $P$ acts as a soft kNN graph, where the perplexity is the effective number of neighbours $k$ \course{kNN, L01; Gaussian (RBF) kernel, L02}.
+The map points $y$ are also converted into similarities, $q_{j|i}$. They too are proportional to a Gaussian distribution, with the same form as (\ref{eq:p-cond}) applied to $y$, but the width $\sigma$ is fixed and the same for every point.
 \begin{align}
-  C &= \sum_i \mathrm{KL}(P_i \,\|\, Q_i) = \sum_i \sum_j p_{j|i} \log \frac{p_{j|i}}{q_{j|i}}, \label{eq:cost-sne} \\
-  \frac{\partial C}{\partial y_i} &= 2 \sum_j \left(p_{j|i} - q_{j|i} + p_{i|j} - q_{i|j}\right)(y_i - y_j) . \label{eq:grad-sne}
+C&=\sum_i \mathrm{KL}(P_i\,\|\,Q_i)=\sum_i\sum_j p_{j|i}\log\frac{p_{j|i}}{q_{j|i}}
+\label{eq:cost-sne}\\
+\frac{\partial C}{\partial y_i}&=2\sum_j\left(p_{j|i}-q_{j|i}+p_{i|j}-q_{i|j}\right)(y_i-y_j)
+\label{eq:grad-sne}
 \end{align}
+The cost function is a KL divergence and measures how well $q_{j|i}$ models $p_{j|i}$. $P$ is fixed so the KL is the cross-entropy plus constant, therefore the same family as logistic regression's negative log-likelihood cost. The cost is minimised using the gradient descent method \course{gradient descent, L07; logistic regression's negative log-likelihood, L07}.
 
-There are three problems with SNE. Firstly, the cost is asymmetric: large $p$/small $q$ is costly, small $p$/large $q$ is cheap, hence focuses on the local structure over the global structure of the map. Secondly, the cost function is difficult to optimise with many local minima, a four-term gradient, and it needs simulated annealing and careful tuning to reach a good map. Thirdly, due to the curse of dimensionality there is $\times 1000$ more room in a 10-D map than a 2-D map, hence too little room for moderately distanced points so they are crushed together in the centre of the map. \emph{Course link: curse of dimensionality (Lecture~1).}
+There are three problems with SNE. Firstly, the cost is asymmetric: large $p$/ small $q$ is costly, small $p$/ large $q$ is cheap, hence the cost focuses on the local structure over the global structure of the map. Secondly, the cost function is difficult to optimise with many local minima, a four-term gradient, and it needs simulated annealing and careful tuning to reach a good map. Thirdly, due to the curse of dimensionality there is $\times$1000 more room in a 10-D data space than a 2-D map for moderately distanced data points, hence these points are crushed together in the centre of the map~\cite{vandermaaten2008} \course{curse of dimensionality, L01}.
 
 \subsection{Symmetric SNE.}
-The symmetric SNE uses the joint probability distribution of $p$ and $q$.
 \begin{equation}
-  p_{ij} = \frac{p_{j|i} + p_{i|j}}{2n}, \qquad
-  q_{ij} = \frac{\exp\!\left(-\|y_i - y_j\|^2\right)}{\sum_{k \neq l} \exp\!\left(-\|y_k - y_l\|^2\right)} .
-  \label{eq:joint}
+p_{ij}=\frac{p_{j|i}+p_{i|j}}{2n},\quad
+q_{ij}=\frac{\exp\!\left(-\|y_i-y_j\|^2\right)}{\sum_{k\neq l}\exp\!\left(-\|y_k-y_l\|^2\right)},\quad
+\frac{\partial C}{\partial y_i}=4\sum_j\left(p_{ij}-q_{ij}\right)(y_i-y_j)
+\label{eq:joint}
 \end{equation}
-$p_{ij}$ is computed this way, rather than one Gaussian over all pairs, so that $\sum_j p_{ij} > \frac{1}{2n}$ for every point. This allows outliers to count, which would have originally had a tiny $p_{ij}$.
-\begin{equation}
-  \frac{\partial C}{\partial y_i} = 4 \sum_j \left(p_{ij} - q_{ij}\right)(y_i - y_j) .
-  \label{eq:grad-ssne}
-\end{equation}
+The symmetric SNE uses the joint probability distribution of $p$ and $q$. $p_{ij}$ is computed this way, rather than one Gaussian over all pairs, to allow 
+$\sum_j p_{ij}>\frac{1}{2n}$. This lets outliers count, which would have originally had a tiny $p_{ij}$.
 The symmetric SNE improves the optimisation of the cost function due to its simpler gradient; however, issues remain, like the crowding problem.
 
 \subsection{The crowding problem and t-SNE.}
-To alleviate the crowding problem, t-SNE uses the Student-t distribution rather than the Gaussian to compute $q$ ($p$ uses the Gaussian). As shown by Figure~\ref{fig:kernels}, Student-t gives far points in the map more room, reducing the crowding problem.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.58\linewidth]{ours_gaussian_vs_student.pdf}
-  \caption{Our own illustration. The Gaussian and the Student-t curve used for similarities in the map. For the same similarity, the Student-t places two points further apart.}
-  \label{fig:kernels}
-\end{figure}
-
-Here are the new $q_{ij}$ and gradient descent equations ($p_{ij}$ and the cost remain unchanged).
+To alleviate the crowding problem, t-SNE uses the Student-t distribution rather than the Gaussian to compute $q$ ($p$ uses the Gaussian)~\cite{vandermaaten2008}. As shown by Figure~\ref{fig:kernels} in Appendix~\ref{app:kernels}, Student-t gives far points in the map more room, reducing the crowding problem: for the same similarity of 0.1, the Gaussian places two points about 1.5 apart and the Student-t places them 3 apart.
 \begin{align}
-  q_{ij} &= \frac{\left(1 + \|y_i - y_j\|^2\right)^{-1}}{\sum_{k \neq l} \left(1 + \|y_k - y_l\|^2\right)^{-1}}, \label{eq:q-t} \\
-  \frac{\partial C}{\partial y_i} &= 4 \sum_j \left(p_{ij} - q_{ij}\right)(y_i - y_j)\left(1 + \|y_i - y_j\|^2\right)^{-1} . \label{eq:grad-t}
+q_{ij}&=\frac{(1+\|y_i-y_j\|^2)^{-1}}{\sum_{k\neq l}(1+\|y_k-y_l\|^2)^{-1}}
+\label{eq:q-t}\\
+\frac{\partial C}{\partial y_i}&=4\sum_j\left(p_{ij}-q_{ij}\right)(y_i-y_j)\left(1+\|y_i-y_j\|^2\right)^{-1}
+\label{eq:grad-t}
 \end{align}
-This results in a new factor added to the gradient descent which makes forces in the map fade with distance but not vanish, allowing distant groups to still interact. Annealing is now not necessary due to these long range forces. t-SNE fixes the crowding problem, makes the cost easier to optimize, and partly fixes SNE's focus on local structure over global structure problem.
-
-\subsection{Optimisation and large data sets.}
-\textcolor{red}{[Anna Claire: optimisation part still to be added here.]}
-Applying t-SNE to large data sets maps a subset of points, called `landmark points', but uses random walks through all the data to compute their similarities.
+Equations (\ref{eq:q-t})--(\ref{eq:grad-t}) give the new $q_{ij}$ and gradient equations ($p_{ij}$ and the cost remain unchanged). Due to the new $q_{ij}$, a new factor is added to the gradient, which makes forces in the map fade with distance but not vanish, allowing distant groups to still interact. Annealing is now not necessary due to these long range forces. The full algorithm is given in Algorithm~\ref{alg:tsne} (Appendix~\ref{app:algorithm}). Applying t-SNE to large data sets maps a subset of points, called `landmark points', but uses random walks through all the data to compute their similarities~\cite{vandermaaten2008}. Overall, t-SNE reduces crowding, makes the cost easier to optimise (argued in the paper), and only partly fixes SNE's bias towards local structure.
 
 \section{Experiments in the paper}
 \label{sec:evidence}
@@ -600,5 +582,19 @@ Algorithm~\ref{alg:tsne} puts the method of Section~\ref{sec:method} together. I
     \EndFor
   \end{algorithmic}}
 \end{algorithm}
+
+
+\section{The Gaussian and Student-t kernels}
+\label{app:kernels}
+\appendixnumbering{G}
+
+Figure~\ref{fig:kernels} illustrates the heavy tail of the Student-t used for the map similarities in Section~\ref{sec:method}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.58\linewidth]{ours_gaussian_vs_student.pdf}
+  \caption{\emph{Our figure.} Gaussian $e^{-d^2}$ and Student-t $(1+d^2)^{-1}$ similarity (unnormalised) against map distance $d=\|y_i-y_j\|$. For the same similarity of 0.1, the Gaussian places two points about 1.5 apart and the Student-t places them 3 apart.}
+  \label{fig:kernels}
+\end{figure}
 
 \end{document}
