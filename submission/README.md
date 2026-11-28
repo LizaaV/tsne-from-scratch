@@ -24,7 +24,6 @@ This folder holds what we hand in and the runs behind it. Paper details, setup a
 From `submission/code/`, with the environment from the root README:
 
 ```bash
-pip install "pandas<3"
 python experiments.py mnist       # E8, about 2 min
 python compare3.py                # about 30 min; needs COIL-20 unzipped into ../data/coil-20/
 ```

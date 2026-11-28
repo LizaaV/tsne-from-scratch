@@ -46,26 +46,38 @@ Repository: https://github.com/LizaaV/tsne-from-scratch
 ## Setup and running
 
 ```bash
-python -m venv venv && source venv/bin/activate
+python3 -m venv venv && source venv/bin/activate
 pip install -r resources/requirements.txt
 
-# E1-E7 and the checks (small digits set, no download)
+# E1-E7, E10 and the checks (small digits set, no download)
 cd resources
 python check_gradient.py          # about 5 s
+python worked_example.py          # under 1 s; the 3-point example, checkable by hand
 python experiments.py all         # E1-E7, about 15-20 min on a laptop
-python demo_live.py --perplexity 30
+python e10_sigma.py               # E10, under 1 s
+python demo_live.py --perplexity 30   # opens a window with the live animation
 
 # E8 and the three-data-set comparison (the paper's own data sets)
 cd ../submission/code
-pip install "pandas<3"            # pandas 3 breaks scikit-learn's MNIST loader
 python experiments.py mnist       # E8: MNIST-6000, about 2 min; downloads MNIST the first time
 # if the download fails with a certificate error: MNIST_NPZ=/path/to/mnist.npz python experiments.py mnist
+mkdir -p ../data/coil-20          # COIL-20 (about 13 MB); compare3.py reads it from here
+curl -L -o ../data/coil-20-proc.zip https://www.cs.columbia.edu/CAVE/databases/SLAM_coil-20_coil-100/coil-20/coil-20-proc.zip
+unzip ../data/coil-20-proc.zip -d ../data/coil-20/
 python compare3.py                # MNIST, Olivetti, COIL-20; about 30 min (Sammon on MNIST takes most of it)
 ```
 
-`compare3.py` needs COIL-20 on disk first: download `coil-20-proc.zip` (link above) and unzip it into `submission/data/coil-20/`. That folder is not tracked in git. MNIST and Olivetti download automatically.
+COIL-20 goes into `submission/data/coil-20/`, which is not tracked in git. MNIST and Olivetti download automatically.
 
-Tested with Python 3.7, NumPy 1.21, scikit-learn 1.0, matplotlib 3.5.
+Tested with Python 3.7 (NumPy 1.21, scikit-learn 1.0, matplotlib 3.5) and Python 3.13 (NumPy 2.5, scikit-learn 1.9, matplotlib 3.11).
+
+## Building the report
+
+From `submission/report/`:
+
+```bash
+tectonic -X compile -Z search-path=extra report.tex
+```
 
 ## Data
 
